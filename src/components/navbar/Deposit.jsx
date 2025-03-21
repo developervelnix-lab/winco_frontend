@@ -19,6 +19,9 @@ function Deposit() {
   const [copiedUPI, setCopiedUPI] = useState(false);
   const [selectedOption, setSelectedOption] = useState('mayank');
   const [file, setFile] = useState(null);
+  const [upi, setUpi] = useState('');
+  const [upi2, setUpi2] = useState('');
+  const [bank, setBank] = useState([]);
   const [utr, setUtr] = useState('');
   const [lastFourDigits, setLastFourDigits] = useState('');
   const navigate = useNavigate()
@@ -47,6 +50,29 @@ function Deposit() {
     setAmount(value.toString());
   };
 
+const fetchDepositAddress = async () => {
+    const userId = sessionStorage.getItem("account_id")
+    const authSecretKey = sessionStorage.getItem("auth_secret_key")
+    try {
+      const response = await fetch(API_URL +"?USER_ID=" + userId, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Route: "route-deposit-info",
+          AuthToken: authSecretKey,
+        },
+      })
+
+      const result = await response.json()
+      console.log(result); 
+      setUpi(result.UPI.UPI_ID_1)
+      setUpi2(result.UPI.UPI_ID_2)
+      setBank(result.BANK_DETAILS)
+    } catch (error) {
+      console.error("Error fetching Deposit Address", error)
+    }
+  }
+  fetchDepositAddress()
   const handleCopyUPI = () => {
     navigator.clipboard.writeText(upiIds[selectedOption] || "ranabook@upi");
     setCopiedUPI(true);
@@ -157,9 +183,9 @@ function Deposit() {
                   {copiedUPI ? 'Copied!' : 'Copy'}
                 </button>
               </div>
-              <p className="text-black font-mono text-lg">{upiIds[selectedOption] || "ranabook@upi"}</p>
+              <p className="text-black font-mono text-lg">{upi || "comming soon"}</p>
               
-              {selectedOption === 'mayank' && (
+              {selectedOption === upi && (
                 <div className="mt-4 flex justify-center">
                   <div className="bg-white p-3 rounded-lg">
                     <img src="/api/placeholder/150/150" alt="QR Code" className="w-32 h-32" />
@@ -183,19 +209,19 @@ function Deposit() {
               <div className="space-y-2">
                 <div>
                   <span className="text-black text-sm">Account Name:</span>
-                  <p className="text-black">Winzoo Entertainment Pvt Ltd</p>
+                  <p className="text-black">{bank.ACCOUNT_HOLDER}</p>
                 </div>
                 <div>
                   <span className="text-black text-sm">Account Number:</span>
-                  <p className="text-black font-mono">123456789012345</p>
+                  <p className="text-black font-mono">{bank.ACCOUNT_NUMBER}</p>
                 </div>
                 <div>
                   <span className="text-black text-sm">IFSC Code:</span>
-                  <p className="text-black font-mono">ABCD0123456</p>
+                  <p className="text-black font-mono">{bank.IFSC_CODE}</p>
                 </div>
                 <div>
                   <span className="text-black text-sm">Bank:</span>
-                  <p className="text-black">Example Bank</p>
+                  <p className="text-black">{bank.BANK_NAME}</p>
                 </div>
               </div>
             </div>
