@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { FaCopy, FaShareAlt, FaGift } from 'react-icons/fa';
 import { Toast } from 'flowbite-react';
 import { HiCheck } from 'react-icons/hi';
+import { URL} from '@/utils/constants';
 
 const InviteAndEarn = () => {
-  const referralCode = '917300000000';
-  const referralURL = `https://ranabook.com/home?referralcode=${referralCode}`;
+  const referralCode = sessionStorage.getItem('account_id');
+  const referralURL = `${URL}home?referralcode=${referralCode}`;
   const [showToast, setShowToast] = useState(false);
 
   const handleCopy = (text) => {

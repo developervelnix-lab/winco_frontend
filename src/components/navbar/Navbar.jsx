@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom"
 import AccountInfo from "./AccountInfo"
 import { allsport } from "../jsondata/sport"
 import { FaSignInAlt, FaUserPlus, FaMoneyCheckAlt, FaWallet } from "react-icons/fa"
+import { API_URL } from "@/utils/constants"
 
 function Navbar() {
   const authSecretKey = sessionStorage.getItem("auth_secret_key")
@@ -118,7 +119,7 @@ function Navbar() {
   const fetchAccountInfo = async () => {
     const userId = sessionStorage.getItem("account_id")
     try {
-      const response = await fetch("https://api.ranamatch.com/router/?USER_ID=" + userId, {
+      const response = await fetch(API_URL +"?USER_ID=" + userId, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import generateRandomToken from "@/utils/randomTokenGenerator";
 import { Toast } from "flowbite-react";
 import { HiCheck, HiX } from "react-icons/hi";
+import { API_URL } from "@/utils/constants";
 
 const Register = ({ onSwitchToLogin, onClose }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -62,7 +63,7 @@ const Register = ({ onSwitchToLogin, onClose }) => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch("https://api.ranamatch.com/router/", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -111,7 +112,7 @@ const Register = ({ onSwitchToLogin, onClose }) => {
     }
 
     try {
-      const response = await fetch("https://api.ranamatch.com/router/", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock, X } from "lucide-react";
 import { Toast } from "flowbite-react";
+import { API_URL } from "@/utils/constants";
 
 const PasswordChangeForm = () => {
   const authSecretKey = sessionStorage.getItem('auth_secret_key');
@@ -34,7 +35,7 @@ const PasswordChangeForm = () => {
     }
 
     try {
-      const response = await fetch('https://api.ranamatch.com/router/', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

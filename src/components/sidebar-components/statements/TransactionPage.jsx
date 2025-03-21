@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Select from 'react-select';
 import { FaClipboard } from "react-icons/fa";
+import { API_URL } from "@/utils/constants"; 
 
 const TransactionPage = () => {
   const [activeTab, setActiveTab] = useState("Deposit");
@@ -20,7 +21,7 @@ const TransactionPage = () => {
     if (!authSecretKey) return;
 
     try {
-      const response = await fetch(`https://api.ranamatch.com/router/?USER_ID=${userId}&PAGE_NUM=1`, {
+      const response = await fetch(`${API_URL}?USER_ID=${userId}&PAGE_NUM=1`, {
         method: 'GET',
         headers: {
           'Route': 'route-withdraw-records',

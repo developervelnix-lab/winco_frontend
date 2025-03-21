@@ -5,6 +5,7 @@ import generateRandomToken from "@/utils/randomTokenGenerator";
 import { Toast } from "flowbite-react";
 import { HiCheck, HiX } from "react-icons/hi";
 import { Navigate } from "react-router-dom";
+import { API_URL } from "@/utils/constants";
 
 const Login = ({ onSwitchToRegister, onClose }) => {
   const [loginMethod, setLoginMethod] = useState("mobile");
@@ -54,7 +55,7 @@ const Login = ({ onSwitchToRegister, onClose }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("https://api.ranamatch.com/router/", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +124,7 @@ const Login = ({ onSwitchToRegister, onClose }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("https://api.ranamatch.com/router/", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

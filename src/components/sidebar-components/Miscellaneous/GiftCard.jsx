@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaGift, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { Toast } from 'flowbite-react';
+import { API_URL } from '@/utils/constants';
 
 const GiftCardRedemption = () => {
   const [redeemCode, setRedeemCode] = useState('');
@@ -23,7 +24,31 @@ const GiftCardRedemption = () => {
     }
 
     try {
-      const response = await fetch('https://api.ranamatch.com/router/', {
+      const response = await fetch(API_URL
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        , {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
