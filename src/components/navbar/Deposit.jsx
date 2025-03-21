@@ -11,6 +11,7 @@ import {
   faCreditCard
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '@/utils/constants';
 
 function Deposit() {
   const [amount, setAmount] = useState('');
@@ -25,7 +26,7 @@ function Deposit() {
 
   // Payment options data
   const paymentOptions = [
-    { id: '1', name: 'UPI', type: 'upi', logo: null },
+    { id: '1', name: 'UPI', type: 'upi', logo: faQrcode },
     { id: '2', name: 'UPI', type: 'upi', logo: faQrcode },
     { id: '3', name: 'BANK', type: 'bank', logo: faCreditCard },
 
