@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base class for all gradient buttons */
+.gradient-btn {
+  background-size: 200% 200%;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+/* Primary animation for gradient movement */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 25%;
+  }
+  25% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 100% 25%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 25%;
+  }
+}
+
+/* Pulse animation for added visual interest */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Shine effect animation */
+@keyframes shine {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* Individual game button gradients with varied animation speeds */
+.game-btn-cricket {
+  background-image: linear-gradient(45deg, #1e40af, #3b82f6, #1e40af);
+  animation: gradientShift 2s ease infinite;
+}
+
+.game-btn-football {
+  background-image: linear-gradient(45deg, #065f46, #10b981, #065f46);
+  animation: gradientShift 2.2s ease infinite;
+}
+
+.game-btn-live {
+  background-image: linear-gradient(45deg, #9f1239, #e11d48, #9f1239);
+  animation: gradientShift 1.8s ease infinite;
+}
+
+.game-btn-avatar {
+  background-image: linear-gradient(45deg, #6b21a8, #a855f7, #6b21a8);
+  animation: gradientShift 2.5s ease infinite;
+}
+
+.game-btn-tennis {
+  background-image: linear-gradient(-45deg, #92400e, #f59e0b, #92400e);
+  animation: gradientShift 2.3s ease infinite;
+}
+
+.game-btn-basketball {
+  background-image: linear-gradient(-45deg, #b91c1c, #ef4444, #b91c1c);
+  animation: gradientShift 1.9s ease infinite;
+}
+
+.game-btn-hockey {
+  background-image: linear-gradient(45deg, #0f766e, #14b8a6, #0f766e);
+  animation: gradientShift 2.1s ease infinite;
+}
+
+.game-btn-rugby {
+  background-image: linear-gradient(-45deg, #4d7c0f, #84cc16, #4d7c0f);
+  animation: gradientShift 2.4s ease infinite;
+}
+
+.game-btn-esports {
+  background-image: linear-gradient(45deg, #4338ca, #818cf8, #4338ca);
+  animation: gradientShift 2s ease infinite;
+}
+
+.game-btn-mma {
+  background-image: linear-gradient(-45deg, #9d174d, #ec4899, #9d174d);
+  animation: gradientShift 1.7s ease infinite;
+}
+
+.game-btn-boxing {
+  background-image: linear-gradient(45deg, #7e22ce, #c084fc, #7e22ce);
+  animation: gradientShift 2.2s ease infinite;
+}
+
+.game-btn-volleyball {
+  background-image: linear-gradient(-45deg, #374151, #6b7280, #374151);
+  animation: gradientShift 2.6s ease infinite;
+}
+
+/* Hover effects with faster animations */
+.gradient-btn:hover {
+  animation: gradientShift 1.5s ease infinite; /* Faster animation on hover */
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  transform: translateY(-3px) scale(1.05);
+  z-index: 10;
+}
+
+/* Shine effect on hover */
+.gradient-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  opacity: 0;
+}
+
+.gradient-btn:hover::before {
+  animation: shine 0.75s ease;
+  opacity: 1;
+}
+
+/* Add pulsing effect for active state */
+.gradient-btn:active {
+  animation: pulse 0.3s ease-in-out;
+  transform: scale(0.95);
+}
+
+/* Add glowing effect for selected state */
+.gradient-btn.selected {
+  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+
+/* GameDiplay Card CSS */
+.game-card {
+  background-color: #f5f5f5; /* Light gray background */
+  border-radius: 12px; /* Rounded corners */
+  overflow: hidden; /* Ensures the image respects the border radius */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover effect */
+  text-align: center;
+  padding: 16px;
+  height: 100%; /* Ensure all cards have the same height */
+}
+
+.game-card:hover {
+  transform: translateY(-5px); /* Slight lift on hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+.game-card img {
+  width: 100%;
+  height: 150px; /* Fixed height for consistency */
+  object-fit: cover; /* Ensures the image covers the area without distortion */
+  border-radius: 8px; /* Slightly rounded corners for the image */
+}
+
+.game-card h3 {
+  margin-top: 12px;
+  font-size: 18px;
+  color: #333; /* Dark gray text for contrast */
+  font-weight: 600;
+}
+
+/* Swiper grid layout adjustments */
+.swiper-grid {
+  display: grid;
+  grid-template-rows: repeat(2, 1fr); /* 2 rows */
+  gap: 10px; /* Space between cards */
+}
+
+/* Ensure Swiper slides respect the grid layout */
+.swiper-slide {
+  height: auto; /* Allow slides to adjust to content height */
+}
