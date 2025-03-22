@@ -51,10 +51,12 @@ const PasswordChangeForm = () => {
 
       const result = await response.json();
 
-      if (result.status_code === 200) {
+      if (result.status_code == "success") {
         setToast({ message: "Password changed successfully!", type: "success", visible: true });
         setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
-      } else if (result.status_code === 400 && result.message === "Incorrect old password") {
+      } else if (result.status_code == "authorization_error") {
+        setToast({ message: "Please login again.", type: "error", visible: true });
+      } else if (result.status_code == "password_error") {
         setToast({ message: "Incorrect old password. Please try again.", type: "error", visible: true });
       } else {
         setToast({ message: "Failed to change password. Please try again.", type: "error", visible: true });
