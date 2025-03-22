@@ -24,12 +24,11 @@ function Deposit() {
   const [bank, setBank] = useState([]);
   const [utr, setUtr] = useState('');
   const [mode, setMode] = useState('');
-  const [lastFourDigits, setLastFourDigits] = useState('');
   const navigate = useNavigate()
   const availableDepositOptions = sessionStorage.getItem('deposit_options');
   const userId = sessionStorage.getItem("account_id")
   const authSecretKey = sessionStorage.getItem("auth_secret_key")
-
+  const [toasts, setToasts] = useState([]);
   // Payment options data
   const paymentOptions = [
     { id: 'upi1', name: 'UPI', type: 'upi', logo: faQrcode },
@@ -38,6 +37,13 @@ function Deposit() {
 
   ];
 
+  const addToast = (message, type = 'info') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 5000);
+  };
   // UPI IDs for different options
   const upiIds = {
     mayank: "mayank@upi",
@@ -52,13 +58,16 @@ function Deposit() {
   const handleQuickAmount = (value) => {
     setAmount(value.toString());
   };
-  
+
   const generateQRCodeUrl = (upiId) => {
     if (!upiId) return null;
     return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiId)}&size=150x150`;
   };
   const qrCodeUrl = useMemo(() => generateQRCodeUrl(selectedOption === "upi1" ? upi : upi2), [selectedOption, upi, upi2]);
-
+  useEffect(() => {
+    setActiveTab('upi');
+    setSelectedOption('upi1');
+  }, []);
   useEffect(() => {
     const fetchDepositAddress = async () => {
       try {
@@ -102,36 +111,55 @@ function Deposit() {
 
   const handleDeposit = async () => {
     if (!amount || parseFloat(amount) < 100) {
-      addToast('Amount must be minimum ₹100', 'error');
+      addToast('Amount must be a minimum of ₹100', 'error');
       return;
     }
+
+    if (!utr || utr.trim() === '') {
+      addToast('Please enter a valid UTR', 'error');
+      return;
+    }
+
     const url = new URL(API_URL);
-    url.searchParams.append("USER_ID", userId);
-    url.searchParams.append("RECHARGE_AMOUNT", amount);
-    url.searchParams.append("RECHARGE_MODE", mode);
-    url.searchParams.append("RECHARGE_DETAILS", `${utr},${mode}`);
+    const params = new URLSearchParams({
+      USER_ID: userId,
+      RECHARGE_AMOUNT: amount,
+      RECHARGE_MODE: mode,
+      RECHARGE_DETAILS: `${utr},${mode}`,
+    });
+
+    console.log("Request URL:", url.toString() + '?' + params.toString());
+
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url + '?' + params.toString(), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Route': 'route-recharge-request',
-          'AuthToken': authSecretKey
-        }
+          'AuthToken': authSecretKey,
+        },
       });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const result = await response.json();
+      console.log("API Response:", result);
+
       if (result.status_code === "pending") {
         addToast(`Deposit request of ₹${amount} to ${mode} submitted successfully!`, 'success');
       } else if (result.status_code === "utr_exit") {
-        addToast(`Utr Already exit`, 'error');
+        addToast('UTR already exists', 'error');
       } else {
         addToast(`Deposit failed: ${result.status_code}`, 'error');
       }
     } catch (error) {
-      console.error("Error processing withdrawal request", error);
-      addToast("Error processing withdrawal request. Please try again later.", 'error');
+      console.error("Error processing deposit request", error);
+      addToast("Error processing deposit request. Please try again later.", 'error');
     }
   };
+
 
   return (
     <div className="bg-white text-black shadow-2xl w-full max-w-md mx-auto overflow-hidden">
@@ -145,7 +173,34 @@ function Deposit() {
           <FontAwesomeIcon icon={faXmark} className="text-xl" />
         </button> */}
       </div>
-
+      {/* Toast Container */}
+      <div className="fixed top-4 right-4 z-50 space-y-4">
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            onDismiss={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+            color={
+              toast.type === 'error' ? 'failure' :
+                toast.type === 'success' ? 'success' : 'info'
+            }
+          >
+            <div className="flex items-center">
+              {toast.type === 'success' && (
+                <FaCheckCircle className="text-green-500 mr-2" size={20} />
+              )}
+              {toast.type === 'error' && (
+                <FaExclamationTriangle className="text-red-500 mr-2" size={20} />
+              )}
+              {toast.type === 'info' && (
+                <FaInfoCircle className="text-blue-500 mr-2" size={20} />
+              )}
+              <div className="ml-1 text-sm font-normal">
+                {toast.message}
+              </div>
+            </div>
+          </Toast>
+        ))}
+      </div>
       {/* Payment Options */}
       <div className="p-4 mb-2 bg-white">
         <h3 className="text-black mb-3 font-medium">Payment Options</h3>
@@ -304,13 +359,13 @@ function Deposit() {
           />
         </div>
         {/* Process Button */}
-        <button
+        <button onClick={handleDeposit}
           disabled={(!amount && !utr) ? false : true}
           className={`w-full py-3 rounded-lg text-black font-semibold flex items-center justify-center gap-2 ${amount && parseFloat(amount) > 0 && utr
             ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
             : 'bg-gray-700 cursor-not-allowed opacity-70'
             } transition-all transform hover:scale-[1.02] shadow-md`}
-          onClick={handleDeposit}>
+        >
           <FontAwesomeIcon icon={faWallet} />
           Process Deposit of ₹ {amount ? parseFloat(amount).toLocaleString() : '0'}
         </button>
