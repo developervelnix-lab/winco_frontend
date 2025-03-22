@@ -533,7 +533,7 @@ function Navbar() {
                 </div>
                 <span className="font-medium">Change Password</span>
               </div>
-              <div className="py-3 px-4 flex items-center hover:bg-gray-100 transition-colors cursor-pointer border-b last:border-b-0">
+              {/* <div className="py-3 px-4 flex items-center hover:bg-gray-100 transition-colors cursor-pointer border-b last:border-b-0">
                 <div className="text-red-600 mr-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -555,7 +555,7 @@ function Navbar() {
                   </svg>
                 </div>
                 <span className="font-medium">Login Activity</span>
-              </div>
+              </div> */}
               <div className="py-3 px-4 flex items-center hover:bg-gray-100 transition-colors cursor-pointer border-b last:border-b-0">
                 <div className="text-red-600 mr-3">
                   <svg
