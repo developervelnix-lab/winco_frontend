@@ -10,6 +10,9 @@ import {
   faQrcode,
   faCreditCard
 } from '@fortawesome/free-solid-svg-icons';
+
+import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
+import { Toast } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '@/utils/constants';
 
@@ -81,7 +84,6 @@ function Deposit() {
         });
 
         const result = await response.json();
-        console.log(result);
         setUpi(result.UPI.UPI_ID_1);
         setUpi2(result.UPI.UPI_ID_2);
         setBank(result.BANK_DETAILS);
@@ -110,6 +112,8 @@ function Deposit() {
   };
 
   const handleDeposit = async () => {
+    console.log('Amount:', amount);
+    console.log('UTR:', utr);
     if (!amount || parseFloat(amount) < 100) {
       addToast('Amount must be a minimum of ₹100', 'error');
       return;
@@ -139,11 +143,6 @@ function Deposit() {
           'AuthToken': authSecretKey,
         },
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const result = await response.json();
       console.log("API Response:", result);
 
@@ -360,7 +359,6 @@ function Deposit() {
         </div>
         {/* Process Button */}
         <button onClick={handleDeposit}
-          disabled={(!amount && !utr) ? false : true}
           className={`w-full py-3 rounded-lg text-black font-semibold flex items-center justify-center gap-2 ${amount && parseFloat(amount) > 0 && utr
             ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
             : 'bg-gray-700 cursor-not-allowed opacity-70'
