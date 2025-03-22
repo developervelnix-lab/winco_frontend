@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Toast } from 'flowbite-react';
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
+import { API_URL } from '@/utils/constants';
 
 const Withdraw = () => {
   const [amount, setAmount] = useState('');
@@ -45,7 +46,7 @@ const Withdraw = () => {
 
   const fetchBankCards = async (userId) => {
     try {
-        const url = `https://api.mgfclub.com/router/?USER_ID=${userId}&PAGE_NUM=1`;
+        const url = `${API_URL}?USER_ID=${userId}&PAGE_NUM=1`;
 
         const response = await fetch(url, {
             method: 'GET',
@@ -77,7 +78,7 @@ const Withdraw = () => {
         addToast("Authentication required!", 'error');
         return;
     }
-    const url = new URL("https://api.mgfclub.com/router/");
+    const url = new URL(API_URL);
     url.searchParams.append("USER_ID", userId);
     url.searchParams.append("BENEFICIARY_NAME", userAccountName);
     url.searchParams.append("USER_BANK_NAME", userBankName);
@@ -111,7 +112,7 @@ const Withdraw = () => {
 
   const setPrimaryBankCard = async (cardId) => {
     try {
-        const url = `https://api.mgfclub.com/router/?USER_ID=${userId}&CARD_ID=${cardId}`;
+        const url = `${API_URL}?USER_ID=${userId}&CARD_ID=${cardId}`;
 
         const response = await fetch(url, {
             method: 'GET',
@@ -163,7 +164,7 @@ const Withdraw = () => {
     }
 
     try {
-      const response = await fetch('https://api.ranamatch.com/router/', {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
