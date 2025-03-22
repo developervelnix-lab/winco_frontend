@@ -13,6 +13,7 @@ import { API_URL } from "@/utils/constants"
 
 function Navbar() {
   const authSecretKey = sessionStorage.getItem("auth_secret_key")
+  const userId = sessionStorage.getItem("account_id")
   const [menuOpen, setMenuOpen] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
@@ -54,12 +55,40 @@ function Navbar() {
     { name: "Boxing", gradientClass: "game-btn-boxing" },
     { name: "Volleyball", gradientClass: "game-btn-volleyball" },
   ]
+  const handleGameSelect = async (index) => {
+    setSelectedGame(index);
+    console.log(allsport['Game UID'])    
+    try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        route: "route-play-games",
+        AuthToken: authSecretKey,
+      },
+      body: JSON.stringify({
+        USER_ID: userId,
+        GAME_NAME: allsport["Game Name"],
+        GAME_UID: allsport["Game UID"],
+      }),
+    });
 
-  const handleGameSelect = (index) => {
-    setSelectedGame(index)
-    console.log(allsport["Game UID"])
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    if (data.error) {
+      console.error("Error:", data.status_code || data.error);
+    } else if (data.data?.game_url) {
+      navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(allsport["Game Name"])}`);
+    } else {
+      console.error("No game URL in the response.");
+    }
+  } catch (error) {
+    console.error("Error logging game click:", error);
   }
-
+  };
   const handleLoginClick = () => {
     setShowLogin(true)
     setMenuOpen(false) // Close the sidebar if open

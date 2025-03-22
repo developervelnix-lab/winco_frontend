@@ -7,22 +7,83 @@ import promotionImage from "./images/Promotion.webp";
 import esport from "./images/e-sport.webp"
 import { esportfooter } from "../../components/jsondata/esport.js";
 import { livecusinofooter } from "../jsondata/livecusiniofooter";
+import { API_URL } from "@/utils/constants";
 
 const FooterNav = () => {
   const navigate = useNavigate();
+  const authSecretKey = sessionStorage.getItem("auth_secret_key")
+  const userId = sessionStorage.getItem("account_id")
   
   const goToHome = () => {
     navigate("/");
   };
 
-  function handleESportClick(){
-     console.log(esportfooter["Game UID"])
-  }
-
-  function handlecusinofooter(){
+  async function handlecusinofooter(){
     console.log(livecusinofooter["Game UID"])
-  }
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+         "Content-Type": "application/json",
+          route: "route-play-games",
+          AuthToken: authSecretKey,
+        },
+        body: JSON.stringify({
+          USER_ID: userId,
+          GAME_NAME: livecusinofooter["Game Name"],
+          GAME_UID: livecusinofooter["Game UID"],
+        }),
+      });
   
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+  
+      const data = await response.json();
+      if (data.error) {
+        console.error("Error:", data.status_code || data.error);
+      } else if (data.data?.game_url) {
+        navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(allsport["Game Name"])}`);
+      } else {
+        console.error("No game URL in the response.");
+      }
+    } catch (error) {
+      console.error("Error logging game click:", error);
+    }
+  }
+  const handleESportClick = async (index) => {
+    console.log(esportfooter["Game UID"])   
+      try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+         "Content-Type": "application/json",
+          route: "route-play-games",
+          AuthToken: authSecretKey,
+        },
+        body: JSON.stringify({
+          USER_ID: userId,
+          GAME_NAME: esportfooter["Game Name"],
+          GAME_UID: esportfooter["Game UID"],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+  
+      const data = await response.json();
+      if (data.error) {
+        console.error("Error:", data.status_code || data.error);
+      } else if (data.data?.game_url) {
+        navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(allsport["Game Name"])}`);
+      } else {
+        console.error("No game URL in the response.");
+      }
+    } catch (error) {
+      console.error("Error logging game click:", error);
+    }
+  };
   return (
     <div className="fixed rounded-t-2xl bottom-0 left-0 w-full bg-gray-700 shadow-lg flex justify-around items-center py-3 h-16 relative">
       <div className="flex flex-col items-center text-gray-600">

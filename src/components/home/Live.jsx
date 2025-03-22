@@ -95,13 +95,7 @@ const GameSection = ({ title, games }) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-white text-sm font-semibold">{title}</h2>
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowPopup(true)}
-            className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300"
-          >
-            <FaEye size={12} />
-            <span>See All</span>
-          </button>
+       
         </div>
       </div>
 
