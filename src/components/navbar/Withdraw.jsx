@@ -51,7 +51,9 @@ const Withdraw = () => {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'Route': 'route-get-bankcards'
+                'Content-Type': 'application/json',
+                'Route': 'route-get-bankcards',
+                'AuthToken': authSecretKey
             }
         });
 
@@ -91,6 +93,7 @@ const Withdraw = () => {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
+                'Content-Type': 'application/json',
                 'AuthToken': authSecretKey,
                 'Route': 'route-add-bankcard'
             }
@@ -117,7 +120,9 @@ const Withdraw = () => {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'Route': 'route-set-bankcard-primary'
+                'Content-Type': 'application/json',
+                'Route': 'route-set-bankcard-primary',
+                'AuthToken': authSecretKey
             }
         });
 
