@@ -5,6 +5,7 @@ import { slotgames } from "../jsondata/slotgames";
 import { turbogames } from "../jsondata/turbogames";
 import GameplayComponent from "../GamePlayComponent";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "@/utils/constants";
 
 const GameSection = ({ title, games }) => {
   const [preloadedImages, setPreloadedImages] = useState([]);
