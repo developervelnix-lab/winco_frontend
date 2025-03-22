@@ -9,7 +9,7 @@ import { topslot } from "../jsondata/topslot";
 import { slotgames } from "../jsondata/slotgames";
 import { cusinolive } from "../jsondata/cusinolive";
 import { fishgames } from "../jsondata/fishgame"
-
+import { API_URL } from "@/utils/constants";
 import { indianpokergames } from "../jsondata/indianpokergame";
 import { useNavigate } from "react-router-dom";
 
@@ -51,15 +51,44 @@ const GameSection = ({ title, games }) => {
     setConfirmPopup({ show: true, game });
   };
 
-  const confirmGameOpen = () => {
+  const confirmGameOpen = async () => {
+    const authSecretKey = sessionStorage.getItem("auth_secret_key");
+    const userId = sessionStorage.getItem('account_id');
+  
     const game = confirmPopup.game;
     setLoadingForGames(game["Game UID"]);
+  
     try {
-      console.log(`Clicked game UID: ${game["Game UID"]}`);
-      const gameUrl = `https://winbuzz360.com/aviator`;
-      navigate(`/game-url/${encodeURIComponent(gameUrl)}/${encodeURIComponent(game["Game Name"])}`);
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          route: "route-play-games",
+          AuthToken: authSecretKey,
+        },
+        body: JSON.stringify({
+          USER_ID: userId,
+          GAME_NAME: game["Game Name"],
+          GAME_UID: game["Game UID"],
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+  
+      const data = await response.json();
+      
       if (showPopup) {
         setShowPopup(false);
+      }
+  
+      if (data.error) {
+        console.error("Error:", data.status_code || data.error);
+      } else if (data.data?.game_url) {
+        navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(game["Game Name"])}`);
+      } else {
+        console.error("No game URL in the response.");
       }
     } catch (error) {
       console.error("Error logging game click:", error);
@@ -68,6 +97,7 @@ const GameSection = ({ title, games }) => {
       setConfirmPopup({ show: false, game: null });
     }
   };
+  
 
   return (
     <div className="game-section relative w-full px-3 py-3 bg-gray-900 rounded-lg shadow-lg">
