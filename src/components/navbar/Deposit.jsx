@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faWallet,
@@ -52,31 +52,44 @@ function Deposit() {
   const handleQuickAmount = (value) => {
     setAmount(value.toString());
   };
+  
   const generateQRCodeUrl = (upiId) => {
     if (!upiId) return null;
     return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiId)}&size=150x150`;
   };
-  const fetchDepositAddress = async () => {
-    try {
-      const response = await fetch(API_URL + "?USER_ID=" + userId, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-deposit-info",
-          AuthToken: authSecretKey,
-        },
-      })
+  const qrCodeUrl = useMemo(() => generateQRCodeUrl(selectedOption === "upi1" ? upi : upi2), [selectedOption, upi, upi2]);
 
-      const result = await response.json()
-      console.log(result);
-      setUpi(result.UPI.UPI_ID_1)
-      setUpi2(result.UPI.UPI_ID_2)
-      setBank(result.BANK_DETAILS)
-    } catch (error) {
-      console.error("Error fetching Deposit Address", error)
+  useEffect(() => {
+    const fetchDepositAddress = async () => {
+      try {
+        const response = await fetch(API_URL + "?USER_ID=" + userId, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Route: "route-deposit-info",
+            AuthToken: authSecretKey,
+          },
+        });
+
+        const result = await response.json();
+        console.log(result);
+        setUpi(result.UPI.UPI_ID_1);
+        setUpi2(result.UPI.UPI_ID_2);
+        setBank(result.BANK_DETAILS);
+      } catch (error) {
+        console.error("Error fetching Deposit Address", error);
+      }
+    };
+
+    fetchDepositAddress();
+  }, [userId, authSecretKey]);
+  useEffect(() => {
+    if (activeTab === 'upi') {
+      setMode('UPIPay');
+    } else if (activeTab === 'bank') {
+      setMode('BankPay');
     }
-  }
-  fetchDepositAddress()
+  }, [activeTab]);
   const handleCopyUPI = () => {
     navigator.clipboard.writeText(selectedOption === "upi1" ? upi : upi2);
     setCopiedUPI(true);
@@ -145,8 +158,8 @@ function Deposit() {
                 setActiveTab(option.type);
               }}
               className={`flex flex-col items-center min-w-[100px] p-3 rounded-lg border transition-all ${selectedOption === option.id
-                  ? 'bg-white/10 border-amber-500 shadow-md shadow-amber-500/20'
-                  : 'bg-gray-300 border-gray-700 hover:bg-gray-700/30'
+                ? 'bg-white/10 border-amber-500 shadow-md shadow-amber-500/20'
+                : 'bg-gray-300 border-gray-700 hover:bg-gray-700/30'
                 }`}
             >
               {option.logo ? (
@@ -230,11 +243,12 @@ function Deposit() {
             <div className="mt-4 flex justify-center">
               <div className="bg-white p-3 rounded-lg">
                 <img
-                  src={generateQRCodeUrl(selectedOption === "upi1" ? upi : upi2)}
+                  src={qrCodeUrl}
                   alt="QR Code for payment"
                   className="w-32 h-32"
                   aria-label="QR code for payment"
                 />
+
               </div>
             </div>
 
@@ -289,17 +303,14 @@ function Deposit() {
             className="bg-white text-black placeholder-gray-400 border border-red-800/50 w-full py-3 pl-4 pr-4 rounded-lg focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
-
-        {activeTab === 'upi' ? setMode("UPIPay") : setMode("BankPay")}
-
         {/* Process Button */}
         <button
-          disabled={!amount || parseFloat(amount) <= 0 && !utr}
-          className={`w-full py-3 rounded-lg text-black font-semibold flex items-center justify-center gap-2 ${amount && parseFloat(amount) > 0 && file && utr && lastFourDigits
-              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-              : 'bg-gray-700 cursor-not-allowed opacity-70'
+          disabled={(!amount && !utr) ? false : true}
+          className={`w-full py-3 rounded-lg text-black font-semibold flex items-center justify-center gap-2 ${amount && parseFloat(amount) > 0 && utr
+            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+            : 'bg-gray-700 cursor-not-allowed opacity-70'
             } transition-all transform hover:scale-[1.02] shadow-md`}
-        >
+          onClick={handleDeposit}>
           <FontAwesomeIcon icon={faWallet} />
           Process Deposit of ₹ {amount ? parseFloat(amount).toLocaleString() : '0'}
         </button>
