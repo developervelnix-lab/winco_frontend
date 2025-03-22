@@ -29,8 +29,8 @@ function Deposit() {
 
   // Payment options data
   const paymentOptions = [
-    { id: '1', name: 'UPI', type: 'upi', logo: faQrcode },
-    { id: '2', name: 'UPI', type: 'upi', logo: faQrcode },
+    { id: 'upi1', name: 'UPI', type: 'upi', logo: faQrcode },
+    { id: 'upi2', name: 'UPI', type: 'upi', logo: faQrcode },
     { id: '3', name: 'BANK', type: 'bank', logo: faCreditCard },
 
   ];
@@ -49,7 +49,10 @@ function Deposit() {
   const handleQuickAmount = (value) => {
     setAmount(value.toString());
   };
-
+  const generateQRCodeUrl = (upiId) => {
+    if (!upiId) return null; 
+    return `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiId)}&size=150x150`;
+  };
 const fetchDepositAddress = async () => {
     const userId = sessionStorage.getItem("account_id")
     const authSecretKey = sessionStorage.getItem("auth_secret_key")
@@ -170,39 +173,47 @@ const fetchDepositAddress = async () => {
           </div>
         </div>
         
-        {activeTab === 'upi' ? (
-          <div>
-            <div className="bg-gray-300 border border-black rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-black font-medium">UPI ID</p>
-                <button 
-                  onClick={handleCopyUPI}
-                  className="text-black flex items-center gap-1 text-sm"
-                >
-                  <FontAwesomeIcon icon={copiedUPI ? faCheck : faCopy} />
-                  {copiedUPI ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              <p className="text-black font-mono text-lg">{upi || "comming soon"}</p>
-              
-              {selectedOption === upi && (
-                <div className="mt-4 flex justify-center">
-                  <div className="bg-white p-3 rounded-lg">
-                    <img src="/api/placeholder/150/150" alt="QR Code" className="w-32 h-32" />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-white border border-black rounded-lg p-4 mb-6 flex items-start gap-3">
-              <FontAwesomeIcon icon={faInfoCircle} className="text-black" />
-              <p className="text-black text-sm">
-                After sending payment through UPI, your account will be credited within 5 minutes. 
-                If you face any issues, please contact customer support.
-              </p>
-            </div>
+        {activeTab === 'upi' ?  (
+    <div>
+      {(selectedOption === "upi1" || selectedOption === "upi2") && (
+        <div className="bg-gray-300 border border-black rounded-lg p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-black font-medium">UPI ID</p>
+            <button 
+              onClick={handleCopyUPI}
+              className="text-black flex items-center gap-1 text-sm"
+              aria-label="Copy UPI ID"
+            >
+              <FontAwesomeIcon icon={copiedUPI ? faCheck : faCopy} />
+              {copiedUPI ? 'Copied!' : 'Copy'}
+            </button>
           </div>
-        ) : (
+          <p className="text-black font-mono text-lg">
+            {selectedOption === "upi1" ? (upi || "Coming soon") : (upi2 || "Coming soon")}
+          </p>
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-center">
+        <div className="bg-white p-3 rounded-lg">
+            <img 
+              src={generateQRCodeUrl(selectedOption === "upi1" ? upi : upi2)} 
+              alt="QR Code for payment"
+              className="w-32 h-32"
+              aria-label="QR code for payment"
+            />
+        </div>
+      </div>
+
+      <div className="bg-white border border-black rounded-lg p-4 mb-6 flex items-start gap-3">
+        <FontAwesomeIcon icon={faInfoCircle} className="text-black" />
+        <p className="text-black text-sm">
+          After sending payment through UPI, your account will be credited within 5 minutes. 
+          If you face any issues, please contact customer support.
+        </p>
+      </div>
+    </div>
+  ) : (
           <div>
             <div className=" bg-white border border-black text-black rounded-lg p-4 mb-6">
               <p className="text-black font-medium mb-2">Bank Details</p>
@@ -249,12 +260,12 @@ const fetchDepositAddress = async () => {
         </div>
          */}
          <div className="mb-6">
-          <label className="block text-black mb-2 font-medium">Last 4 Digits of UTR/RRN Number</label>
+          <label className="block text-black mb-2 font-medium">ENTER UTR</label>
           <input
             type="text"
-            value={lastFourDigits}
-            onChange={(e) => setLastFourDigits(e.target.value)}
-            placeholder="Enter last 4 digits"
+            value={utr}
+            onChange={(e) => setUtr(e.target.value)}
+            placeholder="Enter utr"
             className="bg-white text-black placeholder-gray-400 border border-red-800/50 w-full py-3 pl-4 pr-4 rounded-lg focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>
