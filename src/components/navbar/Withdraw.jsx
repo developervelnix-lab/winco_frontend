@@ -14,6 +14,7 @@ const Withdraw = () => {
   const userId = sessionStorage.getItem('account_id');
   const availableBalance = sessionStorage.getItem('avl_balance');
   const [toasts, setToasts] = useState([]);
+  const [availableBanks, setAvailableBanks] = useState([]);
 
   const [formData, setFormData] = useState({
     realName: '',
@@ -22,14 +23,7 @@ const Withdraw = () => {
     ifscCode: ''
   });
 
-  const availableBanks = [
-    { name: 'Indian Overseas Bank', icon: '/path-to-indian-overseas-icon.png' },
-    { name: 'State Bank of India (SBI)', icon: '/path-to-sbi-icon.png' },
-    { name: 'HDFC Bank', icon: '/path-to-hdfc-icon.png' },
-    { name: 'ICICI Bank', icon: '/path-to-icici-icon.png' },
-    { name: 'Axis Bank', icon: '/path-to-axis-icon.png' },
-    { name: 'Kotak Mahindra Bank', icon: '/path-to-kotak-icon.png' }
-  ];
+ 
 
   const addToast = (message, type = 'info') => {
     const id = Date.now();
@@ -74,7 +68,26 @@ const Withdraw = () => {
         addToast("Error loading bank accounts. Please try again.", 'error');
     }
   };
+  const fetchBankList = async (userId) => {
+    try {
+        const url = `${API_URL}?USER_ID=${userId}`;
 
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Route': 'route-get-banklist',
+                'AuthToken': authSecretKey
+            }
+        });
+
+        const result = await response.json();
+        setAvailableBanks(result.data.banklist)
+    } catch (error) {
+        console.error("Error fetching bank list", error);
+    }
+  };
+ fetchBankList()
   const addBankDetails = async (userId, userAccountName, userBankName, userBankAccountNumber, userIfscCode) => {
     if (!authSecretKey) {
         addToast("Authentication required!", 'error');
@@ -335,15 +348,15 @@ const Withdraw = () => {
                     <div className="absolute z-10 w-full mt-10 bg-white rounded-md shadow-lg overflow-y-auto max-h-40">
                       {availableBanks.map(bank => (
                         <button
-                          key={bank.name}
+                          key={bank.bankName}
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, selectedBank: bank.name }));
+                            setFormData(prev => ({ ...prev, selectedBank: bank.bankName }));
                             setShowBankDropdown(false);
                           }}
                           className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          {bank.name}
+                          {bank.bankName}
                         </button>
                       ))}
                     </div>
