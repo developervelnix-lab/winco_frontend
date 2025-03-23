@@ -8,10 +8,10 @@ const Footer = () => {
         {/* Left Section */}
         <div className="w-full md:w-1/3">
           <h2 className="font-bold text-xl mb-1">
-            <span className="text-green-500">RANA</span>BOOK
+            <span className="text-green-500">Tithi</span>365
           </h2>
           <p className="text-xm text-gray-700 leading-relaxed">
-            <strong>Ranabook</strong> is the best platform for live and uninterrupted online
+            <strong>Kolor Bet</strong> is the best platform for live and uninterrupted online
             betting for sports, Live 24hr betting with a wide spectrum of sports
             such as Cricket, Soccer, Horse Racing, Kabaddi, <strong>Aviator
             Predictor</strong>, Hockey, Basketball, <strong>Andar Bahar Game</strong> and
@@ -60,7 +60,7 @@ const Footer = () => {
           <a href="#" className="text-blue-600 hover:text-blue-700 transition duration-300">Whatsapp</a>
         </div>
         <p className="text-sm text-gray-600 mb-4">
-  © Copyright 2025 Ranabook | Powered by{" "}
+  © Copyright 2025 Kolor Bet | Powered by{" "}
   <a href="https://jinkteam.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
     Jinkteam
   </a>

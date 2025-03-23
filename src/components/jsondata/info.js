@@ -1,4 +1,4 @@
 export const ranabook = {
-    "name" : "Ranabook"
+    "name" : "Kolor Bet"
 
 }

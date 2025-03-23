@@ -31,8 +31,8 @@ const Faq = () => {
 
   const faqs = [
     {
-      title: ` Why is Ranabook one of the best online betting sites in India?`,
-      content: "Ranabook is a trusted betting platform offering fast transactions and secure gaming experiences.",
+      title: ` Why is Kolor Bet one of the best online betting sites in India?`,
+      content: "Kolor Bet is a trusted betting platform offering fast transactions and secure gaming experiences.",
     },
     {
       title: "Is online betting legal in India?",

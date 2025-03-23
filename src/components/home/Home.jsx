@@ -132,7 +132,7 @@ function LogoLoader() {
       <div className="flex flex-col items-center">
         <div className="text-center">
           <div className="text-4xl md:text-6xl font-extrabold text-black mb-4 animate-pulse tracking-wider">
-            RANABOOK
+          Kolor Bet
           </div>
           <div className="text-md md:text-base font-semibold text-black ">PREMIER BETTING EXPERIENCE</div>
         </div>
@@ -155,7 +155,7 @@ function ToastMessage({ onClose }) {
 function SuccessToastMessage({ onClose }) {
   return (
     <div className="toast-message fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-lime-600 text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
-      <span className="flex-1 text-center">Successfully logged in. Welcome to RANABOOK!</span>
+      <span className="flex-1 text-center">Successfully logged in. Welcome to Kolor Bet!</span>
       <button onClick={onClose} className="ml-4 text-white font-bold">
         &times;
       </button>

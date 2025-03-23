@@ -129,7 +129,7 @@ const FooterNav = () => {
             className="w-full h-full object-cover rounded-full"
           />
         </div>
-        <span className="text-xs font-semibold text-white">Cusino</span>
+        <span className="text-xs font-semibold text-white">Casino</span>
       </div>
       
       <div className="flex flex-col items-center text-gray-800"

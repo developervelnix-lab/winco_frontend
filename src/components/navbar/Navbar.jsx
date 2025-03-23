@@ -199,7 +199,7 @@ function Navbar() {
           {/* Logo */}
           <div className="flex items-center" onClick={handleLogoClick}>
             <span className="self-center text-xl font-bold bg-gradient-to-r from-yellow-300 to-amber-500 bg-clip-text text-transparent drop-shadow-md">
-              Ranabook
+            Kolor Bet
             </span>
           </div>
 

@@ -40,7 +40,7 @@ const TransactionPage = () => {
     if (!authSecretKey) return;
 
     try {
-      const response = await fetch(`https://api.ranamatch.com/router/?USER_ID=${userId}&PAGE_NUM=1`, {
+      const response = await fetch(`https://api.kolorbet.com/router/?USER_ID=${userId}&PAGE_NUM=1`, {
         method: 'GET',
         headers: {
           'Route': 'route-recharge-records',
