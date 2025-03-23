@@ -1,3 +1,9 @@
+/*
+  Author: DevKilla
+  Buy Code From: jinkteam.com
+  Contact: @devkilla (Telegram)
+*/
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -353,7 +359,7 @@ function Deposit() {
             type="text"
             value={utr}
             onChange={(e) => setUtr(e.target.value)}
-            placeholder="Enter utr"
+            placeholder="Enter 12 digit utr number"
             className="bg-white text-black placeholder-gray-400 border border-red-800/50 w-full py-3 pl-4 pr-4 rounded-lg focus:outline-none focus:border-amber-500 transition-colors"
           />
         </div>

@@ -187,7 +187,7 @@ const TransactionCard = ({ data, setToast }) => {
         </div>
         <div className="flex justify-between">
           <span>Type:</span>
-          <span>{data.type || "N/A"}</span>
+          <span>{data.type || "BANK"}</span>
         </div>
         <div className="flex justify-between">
           <span>Time:</span>

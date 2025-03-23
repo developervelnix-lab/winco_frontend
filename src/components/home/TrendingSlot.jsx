@@ -1,40 +1,39 @@
 import React from "react";
-import { Flame, Star, Square, Fish, Video, Trophy } from "lucide-react";
 
-const TrendingSlot = () => {
-  const trendingCategories = [
-    { name: "Hot", gradient: "from-red-500 to-orange-500", icon: <Flame size={30} /> },
-    { name: "Slot", gradient: "from-yellow-400 to-pink-500", icon: <Star size={30} /> },
-    { name: "Card", gradient: "from-indigo-500 to-blue-500", icon: <Square size={30} /> },
-    { name: "Fishing", gradient: "from-purple-500 to-pink-500", icon: <Fish size={30} /> },
-    { name: "Live", gradient: "from-teal-500 to-green-500", icon: <Video size={30} /> },
-    { name: "Sports", gradient: "from-orange-500 to-red-500", icon: <Trophy size={30} /> },
+const QuickLinks = () => {
+  const quickLinks = [
+    { name: "Loyalty Hub", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/3d6bd6ce-5e79-4ff5-84b9-e55a266e7722" },
+    { name: "Promotions", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/b8425b6f-b506-4481-afb2-0ac18ac2ce57" },
+    { name: "All Live", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/d30b85da-47da-4ece-be32-e0fc7eb1af0b" },
+    { name: "IPL", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/50d52bfe-2689-4dc4-9385-76022440af2e" },
+    { name: "EPL", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/c00dc7de-ddfd-41a3-b9dc-bbb479c238e9" },
+    { name: "Virtual Penalty", img: "https://images.ubo-cms.com/cdn-cgi/image/format=auto,width=32,height=32,dpr=2/cms/ce07b340-7627-48a1-8c1e-d907537fd5ee" },
   ];
 
   return (
-    <div className="bg-gradient-to-br from-black to-gray-900 rounded-xl p-6 sm:p-10 shadow-2xl border-2 border-yellow-400 relative overflow-hidden">
-      <h2 className="text-3xl sm:text-4xl font-bold text-yellow-400 text-center mb-8 uppercase tracking-wider">
-        🎰 Trending Slots 🎲
+    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-300">
+      <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 text-gray-800 uppercase tracking-wide">
+        Quick Access
       </h2>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {trendingCategories.map((category, index) => (
+      {/* Small white boxes evenly spread */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        {quickLinks.map((link, index) => (
           <div
             key={index}
-            className={`bg-gradient-to-br ${category.gradient} p-4 rounded-lg text-white text-center shadow-lg transform transition-transform duration-300 hover:scale-110 hover:rotate-1`}
+            className="bg-white border border-gray-300 rounded-md p-3 flex flex-col items-center shadow-sm hover:shadow-md transition"
           >
-            <div className="flex justify-center mb-2 animate-pulse">{category.icon}</div>
-            <h3 className="text-lg sm:text-xl font-semibold">{category.name}</h3>
-            <p className="text-xs sm:text-sm opacity-90 mt-1">Explore {category.name}</p>
+            <img
+              src={link.img}
+              alt={link.name}
+              className="w-8 h-8 border border-gray-400 rounded-full mb-2"
+            />
+            <p className="text-xs text-gray-700 text-center">{link.name}</p>
           </div>
         ))}
       </div>
-
-      {/* Subtle glowing effect */}
-      <div className="absolute top-0 left-0 w-40 h-40 bg-yellow-400 opacity-10 rounded-full blur-3xl animate-ping"></div>
-      <div className="absolute bottom-0 right-0 w-40 h-40 bg-pink-500 opacity-10 rounded-full blur-3xl animate-ping"></div>
     </div>
   );
 };
 
-export default TrendingSlot;
+export default QuickLinks;

@@ -1,3 +1,10 @@
+/*
+  Author: DevKilla
+  Buy Code From: jinkteam.com
+  Contact: @devkilla (Telegram)
+*/
+
+
 import React, { useState, useEffect } from 'react';
 import { FaCrown, FaCoins } from 'react-icons/fa';
 import bonus2 from '../../navbar/images/bonus2.jpg';

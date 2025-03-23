@@ -68,11 +68,9 @@ const Withdraw = () => {
         addToast("Error loading bank accounts. Please try again.", 'error');
     }
   };
-  const fetchBankList = async (userId) => {
-    try {
-        const url = `${API_URL}?USER_ID=${userId}`;
-
-        const response = await fetch(url, {
+  const fetchBankList = async () => {
+    try {       
+        const response = await fetch(API_URL, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -86,8 +84,7 @@ const Withdraw = () => {
     } catch (error) {
         console.error("Error fetching bank list", error);
     }
-  };
- fetchBankList()
+  }; 
   const addBankDetails = async (userId, userAccountName, userBankName, userBankAccountNumber, userIfscCode) => {
     if (!authSecretKey) {
         addToast("Authentication required!", 'error');
@@ -157,6 +154,7 @@ const Withdraw = () => {
   useEffect(() => { 
     fetchBankCards(userId);
     setAccountBalance(availableBalance);
+    fetchBankList();
   }, [authSecretKey]);
 
   const handleAddBank = () => {

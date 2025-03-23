@@ -1,3 +1,9 @@
+/*
+  Author: DevKilla
+  Buy Code From: jinkteam.com
+  Contact: @devkilla (Telegram)
+*/
+
 import React, { useState } from 'react';
 
 const OpenBets = () => {

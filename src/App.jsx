@@ -1,3 +1,9 @@
+/*
+  Author: DevKilla
+  Buy Code From: jinkteam.com
+  Contact: @devkilla (Telegram)
+*/
+
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from './components/home/Home';
 import GameplayComponent from './components/GamePlayComponent';
