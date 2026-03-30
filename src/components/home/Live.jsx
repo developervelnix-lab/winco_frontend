@@ -1,24 +1,54 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FaArrowLeft, FaPlay } from "react-icons/fa"
+import { createPortal } from "react-dom"
+import { FaChevronLeft, FaChevronRight, FaEye, FaArrowLeft, FaPlay } from "react-icons/fa"
 import { liveSport } from "../jsondata/live"
 import { turbogames } from "../jsondata/turbogames"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { API_URL } from "@/utils/constants"
+import { useColors } from '../../hooks/useColors'
+import { FONTS } from '../../constants/theme'
 
 const GameSection = ({ title, games }) => {
+  const COLORS = useColors()
   const [preloadedImages, setPreloadedImages] = useState([])
   const [loadingForGames, setLoadingForGames] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
-  const navigate = useNavigate()
   const [confirmPopup, setConfirmPopup] = useState({ show: false, game: null })
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [hoveredGame, setHoveredGame] = useState(null)
   const [confirmLoading, setConfirmLoading] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
 
+  const popupParam = searchParams.get("show_all")
+  const sectionId = title.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-")
+
   useEffect(() => {
-    const images = games.map((game) => game.icon)
+    if (popupParam === sectionId) {
+      setShowPopup(true)
+    } else {
+      setShowPopup(false)
+    }
+  }, [popupParam, sectionId])
+
+  const openPopup = () => {
+    setSearchParams((prev) => {
+      prev.set("show_all", sectionId)
+      return prev
+    })
+  }
+
+  const closePopup = () => {
+    setSearchParams((prev) => {
+      prev.delete("show_all")
+      return prev
+    })
+  }
+
+  useEffect(() => {
+    const images = games?.map((game) => game.icon) || []
     preloadImages(images)
   }, [games])
 
@@ -28,7 +58,6 @@ const GameSection = ({ title, games }) => {
       setLoadingProgress(0)
       const interval = setInterval(() => {
         setLoadingProgress((prev) => {
-          // Increase progress but cap at 90% to wait for actual completion
           const newProgress = prev + Math.random() * 15
           return newProgress > 90 ? 90 : newProgress
         })
@@ -36,7 +65,6 @@ const GameSection = ({ title, games }) => {
 
       return () => clearInterval(interval)
     } else if (loadingProgress > 0) {
-      // When loading completes, quickly fill to 100%
       setLoadingProgress(100)
       const timeout = setTimeout(() => {
         setLoadingProgress(0)
@@ -73,9 +101,11 @@ const GameSection = ({ title, games }) => {
     const userId = sessionStorage.getItem("account_id")
 
     const game = confirmPopup.game
+    if (!game) return
+
     setLoadingForGames(game["Game UID"])
-    setConfirmLoading(true) // Set loading state to true when starting
-    setConfirmPopup({ show: false, game: confirmPopup.game }) // Hide confirmation popup but keep game info
+    setConfirmLoading(true)
+    setConfirmPopup({ show: false, game: confirmPopup.game })
 
     try {
       const response = await fetch(API_URL, {
@@ -99,13 +129,12 @@ const GameSection = ({ title, games }) => {
       const data = await response.json()
 
       if (showPopup) {
-        setShowPopup(false)
+        closePopup()
       }
 
       if (data.error) {
         console.error("Error:", data.status_code || data.error)
       } else if (data.data?.game_url) {
-        // Small delay to ensure loading animation is seen
         setTimeout(() => {
           navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(game["Game Name"])}`)
         }, 500)
@@ -117,186 +146,324 @@ const GameSection = ({ title, games }) => {
     } finally {
       setTimeout(() => {
         setLoadingForGames(null)
-        setConfirmLoading(false) // Reset loading state when done
+        setConfirmLoading(false)
         setConfirmPopup({ show: false, game: null })
       }, 500)
     }
   }
 
   return (
-    <div className="game-section relative w-full px-3 py-3 bg-gray-900 rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-white text-sm font-semibold">{title}</h2>
-        <div className="flex items-center space-x-2"></div>
+    <div
+      className="game-section relative w-full px-4 py-5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 border border-black/5 dark:border-white/5"
+      style={{
+        backgroundColor: `${COLORS.bg2}EE`,
+        backdropFilter: "blur(10px)",
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 w-1.5 h-full opacity-70"
+        style={{ background: COLORS.brandGradient }}
+      ></div>
+
+      <div className="flex justify-between items-center mb-4 md:mb-6 gap-2">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <div 
+            className="h-3 md:h-5 w-1 rounded-full flex-shrink-0"
+            style={{ background: COLORS.brandGradient }}
+          ></div>
+          <h2
+            className="text-[11px] xs:text-sm sm:text-base md:text-lg font-black text-black dark:text-white tracking-[0.05em] uppercase leading-none whitespace-nowrap truncate"
+            style={{ fontFamily: FONTS.head }}
+          >
+            {title}
+          </h2>
+        </div>
+        
+        <button
+          onClick={openPopup}
+          className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase transition-all duration-500 shadow-lg hover:shadow-brand/20 active:scale-95 group overflow-hidden relative"
+          style={{
+            background: COLORS.brandGradient,
+            fontFamily: FONTS.ui,
+            letterSpacing: "0.05em",
+          }}
+          aria-label="See All"
+        >
+          <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <FaEye size={12} className="sm:size-[14px] group-hover:scale-110 transition-transform duration-300" />
+          <span>See All</span>
+        </button>
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        {liveSport.slice(0, 5).map((game, index) => (
-          <div key={index} className={`w-[30%] lg:w-[19%] flex-shrink-0 ${index >= 3 ? "hidden lg:block" : ""}`}>
+      <div
+        className="flex md:grid md:grid-cols-5 overflow-x-auto md:overflow-x-visible scrollbar-hide snap-x snap-mandatory gap-2 sm:gap-3 px-2 pb-4"
+      >
+        {games?.map((game, index) => (
+          <div key={index} 
+            className="flex-shrink-0 w-[calc((100%-16px)/3)] sm:w-[calc((100%-24px)/3.5)] md:w-full snap-start relative aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 dark:bg-white/5 border border-black/10 dark:border-white/10 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl group cursor-pointer" 
+            onClick={() => handleGameClick(game)}
+          >
             <img
-              className={`w-full h-full rounded-xl object-cover cursor-pointer ${
-                loadingForGames === game["Game UID"] ? "opacity-50" : ""
-              }`}
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loadingForGames === game["Game UID"] ? "opacity-30 blur-sm" : ""
+                }`}
               src={game.icon || "/placeholder.svg"}
               alt={game["Game Name"]}
-              onClick={() => handleGameClick(game)}
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 sm:p-3 pointer-events-none">
+              <span className="text-black dark:text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate w-full" style={{ fontFamily: FONTS.ui }}>
+                {game["Game Name"]}
+              </span>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+              <div
+                className="p-1.5 sm:p-5 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-500 shadow-2xl"
+                style={{ background: COLORS.brandGradient }}
+              >
+                <FaPlay className="text-black dark:text-white ml-0.5 block sm:hidden" size={10} />
+                <FaPlay className="text-black dark:text-white ml-1 hidden sm:block" size={24} />
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {showPopup && (
-        <div className="fixed inset-0 bg-gray-900 z-50 overflow-y-auto">
-          <div className="max-w-screen-2xl mx-auto px-4 py-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 transition-all duration-300"
-                  aria-label="Close"
-                >
-                  <FaArrowLeft size={16} />
-                </button>
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
-              </div>
-            </div>
+      {showPopup &&
+        createPortal(
+          <div className="fixed inset-0 bg-black z-[99999] overflow-y-auto animate-fadeIn flex flex-col">
+            <div
+              className="fixed inset-0 pointer-events-none opacity-40"
+              style={{
+                backgroundImage: `radial-gradient(circle at 50% -20%, ${COLORS.brand}44, transparent 70%), radial-gradient(circle at 0% 100%, ${COLORS.brand}22, transparent 50%), radial-gradient(circle at 100% 100%, ${COLORS.brand}22, transparent 50%)`,
+              }}
+            ></div>
 
-            <div className="flex flex-wrap gap-3">
-              {games.map((game, index) => (
-                <div key={index} className="w-[30%] md:w-[15.5%] lg:w-[11.5%] flex flex-col items-center">
-                  <div className="w-full aspect-square relative">
-                    <div
-                      className="relative group w-full"
-                      onMouseEnter={() => setHoveredGame(game["Game UID"])}
-                      onMouseLeave={() => setHoveredGame(null)}
+            <div className="relative flex flex-col min-h-full backdrop-blur-[50px]">
+              <div
+                className="sticky top-0 z-[100] w-full border-b border-black/5 dark:border-white/5 shadow-2xl"
+                style={{ backgroundColor: `${COLORS.bg2}A0` }}
+              >
+                <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between backdrop-blur-md">
+                  <div className="flex items-center gap-6">
+                    <button
+                      onClick={closePopup}
+                      className="bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-2xl p-3.5 transition-all duration-300 border border-black/10 dark:border-white/10 shadow-lg active:scale-95 group"
+                      aria-label="Go Back"
                     >
-                      <img
-                        className={`${
-                          loadingForGames === game["Game UID"] ? "opacity-50" : ""
-                        } rounded-lg cursor-pointer w-full transition-all duration-300 group-hover:brightness-75`}
-                        src={game.icon || "/placeholder.svg"}
-                        alt={game["Game Name"]}
-                        onClick={() => handleGameClick(game)}
-                      />
-                      {hoveredGame === game["Game UID"] && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="bg-black bg-opacity-60 rounded-full p-3">
-                            <FaPlay className="text-white text-opacity-90" size={16} />
+                      <FaArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    </button>
+                    <div className="h-10 w-1 rounded-full opacity-80" style={{ background: COLORS.brandGradient }}></div>
+                    <div>
+                      <h2
+                        className="text-2xl font-black text-black dark:text-white tracking-[0.15em] uppercase"
+                        style={{ fontFamily: FONTS.head }}
+                      >
+                        {title}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
+                        <span className="text-[10px] text-black/40 dark:text-white/40 font-bold uppercase tracking-[0.2em]">
+                          Premium Collection
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+
+                </div>
+              </div>
+
+              <div className="flex-1 w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6">
+                <div className="see-all-grid gap-3 md:gap-6 animate-fadeInUp">
+                  {games.map((game, index) => (
+                    <div key={index} className="flex flex-col group cursor-pointer" onClick={() => handleGameClick(game)}>
+                      <div className="relative aspect-[4/5] rounded-xl overflow-hidden p-[1px] bg-gradient-to-br from-white/10 via-transparent to-white/5 transition-all duration-500 group-hover:from-brand/50 group-hover:to-brand/20 group-hover:shadow-[0_0_30px_rgba(230,160,0,0.4)] group-hover:-translate-y-1">
+                        <div className="relative w-full h-full rounded-[11px] overflow-hidden bg-gray-100 dark:bg-white/5">
+                          <img
+                            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
+                              loadingForGames === game["Game UID"] ? "opacity-30 blur-sm" : ""
+                            }`}
+                            src={game.icon || "/placeholder.svg"}
+                            alt={game["Game Name"]}
+                          />
+
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-white/5 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div
+                              className="p-3 rounded-full shadow-2xl transform scale-50 group-hover:scale-100 transition-all duration-500 hover:scale-110"
+                              style={{ background: COLORS.brandGradient }}
+                            >
+                              <FaPlay className="text-black dark:text-white ml-0.5" size={12} />
+                            </div>
+                          </div>
+
+                          <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                            <div className="backdrop-blur-md bg-black/10 dark:bg-black/40 rounded-lg p-1.5 border border-black/10 dark:border-white/10 text-center shadow-xl">
+                              <p className="text-[9px] font-black text-black/90 dark:text-white/90 truncate uppercase tracking-tighter">
+                                {game["Game Name"]}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    <div className="w-full mt-2 overflow-hidden">
-                      <p className="text-sm font-medium text-center text-white truncate">{game["Game Name"]}</p>
+                  ))}
+                </div>
+              </div>
+
+              <div className="py-12 flex flex-col items-center justify-center gap-4 opacity-10">
+                <div className="h-px w-40 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+                <span className="text-[10px] font-black uppercase tracking-[0.8em] text-black dark:text-white">
+                  Experience Excellence
+                </span>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {confirmPopup.show && createPortal(
+        <div className="fixed inset-0 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[99999] transition-all duration-500 animate-fadeIn">
+          <div
+            className="relative p-10 rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] max-w-sm w-full mx-6 animate-fadeInUp border border-black/10 dark:border-white/10 text-center"
+            style={{
+              backgroundColor: `${COLORS.bg2}F2`,
+              backgroundImage: 'radial-gradient(circle at top right, rgba(230, 160, 0, 0.05), transparent 40%)'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none rounded-[2.5rem]"></div>
+            <div
+              className="absolute -top-10 left-1/2 transform -translate-x-1/2 p-6 rounded-full shadow-2xl animate-bounce-slow"
+              style={{ background: COLORS.brandGradient }}
+            >
+              <FaPlay className="text-black dark:text-white ml-0.5" size={28} />
+            </div>
+            <p
+              className="text-black dark:text-white text-lg font-bold mt-8 mb-2 tracking-tight"
+              style={{ fontFamily: FONTS.head }}
+            >
+              Ready to Win?
+            </p>
+            <p className="text-black/60 dark:text-white/60 text-sm mb-8 leading-relaxed">
+              You are about to enter <span className="text-black dark:text-white font-bold">{confirmPopup.game?.["Game Name"]}</span>. Good luck!
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={confirmGameOpen}
+                className="w-full px-6 py-4 rounded-2xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 group overflow-hidden relative text-black dark:text-white"
+                style={{ background: COLORS.brandGradient, fontFamily: FONTS.ui }}
+              >
+                <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span>Confirm Play</span>
+              </button>
+              <button
+                onClick={() => setConfirmPopup({ show: false, game: null })}
+                className="w-full px-6 py-3 rounded-2xl font-bold uppercase tracking-widest bg-gray-100 dark:bg-white/5 text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-all duration-300 border border-black/5 dark:border-white/5"
+                style={{ fontFamily: FONTS.ui }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {confirmLoading && createPortal(
+        <div className="fixed inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[999999] flex flex-col items-center justify-center transition-all duration-700 animate-fadeIn">
+          <div
+            className="w-full max-w-md px-8 py-10 rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] border border-black/10 dark:border-white/10 relative overflow-hidden text-center"
+            style={{
+              backgroundColor: `${COLORS.bg2}F2`,
+              backgroundImage: 'radial-gradient(circle at top right, rgba(230, 160, 0, 0.05), transparent 40%)'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
+            <div className="relative z-10 mb-8">
+              {confirmPopup.game && (
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-6 group">
+                    <div className="absolute -inset-4 bg-brand/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div className="relative w-28 h-28 rounded-2xl overflow-hidden border-2 border-black/10 dark:border-white/10 shadow-2xl transform transition-transform duration-700 hover:scale-105">
+                      <img
+                        src={confirmPopup.game.icon || "/placeholder.svg"}
+                        alt={confirmPopup.game["Game Name"]}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                     </div>
+                  </div>
+                  <h3
+                    className="text-2xl font-black text-black dark:text-white mb-2 tracking-wider uppercase"
+                    style={{ fontFamily: FONTS.head }}
+                  >
+                    {confirmPopup.game["Game Name"]}
+                  </h3>
+                  <div className="flex items-center gap-2 text-brand font-bold text-xs uppercase tracking-[0.2em] animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-brand shadow-[0_0_10px_rgba(230,160,0,1)]"></span>
+                    Initializing Elite Experience
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="relative z-10 px-4 mb-10">
+              <div className="w-full bg-gray-100 dark:bg-white/5 rounded-full h-1 overflow-hidden backdrop-blur-sm border border-black/5 dark:border-white/5">
+                <div
+                  className="h-full rounded-full transition-all duration-300 ease-out relative"
+                  style={{
+                    width: `${loadingProgress}%`,
+                    background: COLORS.brandGradient,
+                    boxShadow: `0 0 20px ${COLORS.brand}80`
+                  }}
+                >
+                  <div className="absolute top-0 right-0 w-8 h-full bg-gray-100 dark:bg-white/40 blur-sm animate-shimmer"></div>
+                </div>
+              </div>
+              <div className="flex justify-between mt-3 px-1">
+                <span className="text-[10px] text-black/40 dark:text-white/40 font-bold uppercase tracking-widest">Secure Link</span>
+                <span className="text-[10px] text-brand font-black italic">{Math.round(loadingProgress)}%</span>
+              </div>
+            </div>
+            <div className="relative z-10 space-y-4 px-2 mb-10 text-left">
+              {[
+                { label: "Establishing Secure Tunnel", threshold: 30 },
+                { label: "Syncing Game Assets", threshold: 60 },
+                { label: "Optimizing Performance", threshold: 85 }
+              ].map((step, i) => (
+                <div key={i} className="flex justify-between items-center group">
+                  <span className={`text-xs transition-colors duration-500 ${loadingProgress > step.threshold ? "text-black/80 dark:text-white/80" : "text-black/20 dark:text-white/20"}`} style={{ fontFamily: FONTS.ui }}>
+                    {step.label}
+                  </span>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-700 ${loadingProgress > step.threshold
+                    ? "border-brand/40 bg-brand/10 text-brand scale-110 shadow-[0_0_15px_rgba(230,160,0,0.2)]"
+                    : "border-black/5 dark:border-white/5 bg-gray-100 dark:bg-white/2"
+                    }`}>
+                    {loadingProgress > step.threshold ? (
+                      <span className="text-[10px] font-bold">✓</span>
+                    ) : (
+                      <div className="w-1 h-1 bg-gray-100 dark:bg-white/10 rounded-full animate-ping"></div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {confirmPopup.show && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-[99999] transition-opacity duration-300">
-          <div className="bg-white relative p-6 rounded-2xl shadow-2xl max-w-xs w-full mx-6 animate-fadeInUp">
-            {/* Decorative Icon */}
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-blue-400 p-3 rounded-full shadow-lg">
-              <FaPlay className="text-white" size={20} />
-            </div>
-
-            {/* Confirmation Message */}
-            <p className="text-gray-800 text-center mt-6 mb-4 text-sm leading-relaxed">
-              Ready to open <span className="font-semibold text-blue-600">{confirmPopup.game?.["Game Name"]}</span>?
-            </p>
-
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-4 mt-4">
-              <button
-                onClick={() => setConfirmPopup({ show: false, game: null })}
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors text-xs shadow-md"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={confirmGameOpen}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all text-xs shadow-md"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Game Loading Screen */}
-      {confirmLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-md z-[999999] flex flex-col items-center justify-center">
-          <div className="w-full max-w-md px-6 py-8 text-center">
-            {/* Game icon and name */}
-            <div className="mb-6 flex flex-col items-center">
-              {confirmPopup.game && (
-                <>
-                  <div className="w-24 h-24 mb-4 rounded-lg overflow-hidden border-4 border-blue-500 shadow-lg">
-                    <img
-                      src={confirmPopup.game.icon || "/placeholder.svg"}
-                      alt={confirmPopup.game["Game Name"]}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-1">{confirmPopup.game["Game Name"]}</h3>
-                </>
-              )}
-              <p className="text-blue-400 text-sm animate-pulse">Opening game...</p>
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full bg-gray-700 rounded-full h-3 mb-6 overflow-hidden">
-              <div
-                className="bg-gradient-to-r from-blue-500 to-blue-300 h-full rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${loadingProgress}%` }}
-              ></div>
-            </div>
-
-            {/* Loading messages */}
-            <div className="text-white text-sm mb-8">
-              <div className="flex justify-between mb-2">
-                <span>Connecting to server...</span>
-                <span className={loadingProgress > 30 ? "text-green-400" : "text-gray-400"}>
-                  {loadingProgress > 30 ? "✓" : "..."}
-                </span>
+            <div className="relative z-10 py-4 px-6 rounded-2xl bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 backdrop-blur-md group hover:bg-white/[0.08] transition-all duration-500">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-5 h-[1px] bg-brand/50"></div>
+                <span className="text-[10px] text-brand/80 font-black uppercase tracking-widest">Pro Tip</span>
               </div>
-              <div className="flex justify-between mb-2">
-                <span>Loading game assets...</span>
-                <span className={loadingProgress > 60 ? "text-green-400" : "text-gray-400"}>
-                  {loadingProgress > 60 ? "✓" : "..."}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Preparing game environment...</span>
-                <span className={loadingProgress > 85 ? "text-green-400" : "text-gray-400"}>
-                  {loadingProgress > 85 ? "✓" : "..."}
-                </span>
-              </div>
-            </div>
-
-            {/* Tips */}
-            <div className="bg-gray-800 bg-opacity-50 p-4 rounded-lg border border-gray-700">
-              <h4 className="text-gray-300 text-xs uppercase tracking-wider mb-2">TIP</h4>
-              <p className="text-gray-400 text-sm">
-                Make sure to check the game rules before playing to maximize your winning chances!
+              <p className="text-xs text-black/60 dark:text-white/60 leading-relaxed font-medium italic">
+                "Enable high performance mode in settings for the smoothest gameplay experience."
               </p>
             </div>
           </div>
-
-          {/* Animated elements */}
-          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-3">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+          <div className="mt-8 flex items-center gap-4 opacity-30">
+            <div className="h-px w-10 bg-gradient-to-r from-transparent to-white/50"></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-black dark:text-white">Winco Elite</span>
+            <div className="h-px w-10 bg-gradient-to-l from-transparent to-white/50"></div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -304,11 +471,11 @@ const GameSection = ({ title, games }) => {
 
 const Live = () => {
   return (
-    <div className="games-display space-y-6">
-      <GameSection title="🔴 Popular Games " games={turbogames} />
+    <div className="games-display space-y-6 overflow-hidden">
+      {" "}
+      <GameSection title="⚽ Live Sports" games={liveSport} />
     </div>
   )
 }
 
 export default Live
-

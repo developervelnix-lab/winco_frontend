@@ -7,7 +7,7 @@ function WithdrawPage() {
     <>
       <Navbar/>
 
-      <div className='mt-[120px]'>
+      <div className=''>
         <Withdraw/>
       </div>
 

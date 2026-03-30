@@ -16,7 +16,7 @@ const OpenBets = () => {
   return (
     <div className="w-full max-w-4xl mx-auto bg-gray-100 rounded-md overflow-hidden">
       <div 
-        className="bg-pink-700 text-white p-2 flex justify-between items-center cursor-pointer"
+        className="bg-pink-700 text-black dark:text-white p-2 flex justify-between items-center cursor-pointer"
         onClick={toggleCollapse}
       >
         <h2 className="text-xl font-medium">Matched Bets</h2>

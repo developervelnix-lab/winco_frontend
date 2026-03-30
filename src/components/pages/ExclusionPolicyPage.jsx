@@ -1,18 +1,17 @@
-
 import React from 'react'
 import ExclusionPolicy from '../sidebar-components/legal-complience/Exclusion'
 import Navbar from '../navbar/Navbar'
-
+import { useColors } from '../../hooks/useColors';
 function ExclusionPolicyPage() {
+  const COLORS = useColors();
   return (
-     <>
-       <Navbar/>
-       <div className='mt-[112px]'>
-          <ExclusionPolicy/>
-       </div>
-     
-     </>
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
+      <Navbar />
+      <div className='pb-10 px-2'>
+        <ExclusionPolicy />
+      </div>
+    </div>
   )
 }
 
-export default ExclusionPolicyPage
+export default ExclusionPolicyPage   

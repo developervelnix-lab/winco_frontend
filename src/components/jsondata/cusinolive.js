@@ -1,114 +1,134 @@
 export const cusinolive = [
-    {
+   {
         "Game Name": "Microgaming Lobby",
         "Game UID": "4e58131adb95bb061a40e6e309116c19",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/97a368dcf8.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/KvHTkzvW/1731053941552.jpg"
     },
     {
         "Game Name": "Ezugi Lobby",
         "Game UID": "d0e052b031dfcdb08d1803f4bcc618ef",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/24d4df39d5.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/nVNBRrB3/Roulette-Lobby.webp"
     },
 
     {
         "Game Name": "Evolution Lobby",
         "Game UID": "8ef39602e589bf9f32fc351b1cbb338b",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/9e20f4796d.png?_v=4&auto=format&dpr=1.125&w=200"
-    },
-    {
-        "Game Name": "Pragmatic Play",
-        "Game UID": "a1a01855da3f29d09a848e705ad76ea1",
-        "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/9225fb579c.png?_v=4&auto=format&dpr=2.625&w=100"
-    },
-    {
-        "Game Name": "Super Andar Bahar",
-        "Game UID": "f7b98e899461bdd49f92afc36b4c0db5",
-        "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/cbe377c8e7.png?_v=4&auto=format&dpr=1.125&w=200"
-    },
+        "icon": "https://i.postimg.cc/13tCGfSS/102835-evolution-lobby-thumbnailx2.jpg"
+    },   
     {
         "Game Name": "XXXtreme Lightning Roulette",
         "Game UID": "394fe6a2cde24bc487767236cc6eccd6",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/211bf0ceb5.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/rmDXpQh1/first-person-xxxtreme-lightning-roulette-thumbnail-600x840-2023-05.jpg"
     },
     {
         "Game Name": "Crazy Time",
         "Game UID": "917c0c51d248c33eb058e3210a2e7371",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/83ab13d3b8.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/15WM3sqG/crazy-time-thumbnail-600x840-2023-03.jpg"
     },
     {
         "Game Name": "Lightning Roulette",
         "Game UID": "4a858d6b74c05260d3ea2762838798c7",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/60af55899a.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/HLRHXq7m/7611-lightning-roulette.webp"
     },
     {
         "Game Name": "MONOPOLY Live",
         "Game UID": "d496ac5fd91702331133e44b6bd12b26",
         "Game Type": "CasinoLive",
-        "icon": "https://bc.imgix.net/game/image/9f7426d382.png?_v=4&auto=format&dpr=1.125&w=200"
+        "icon": "https://i.postimg.cc/nLfmHP0Y/monopoly-live-poster.jpg"
     },
+      {
+        "Game Name": "Crazy Pachinko",
+        "Game UID": "911a32ad38d77f86baf29a2cdb95da05",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/43XCBf8k/Crazy-Pachinko.jpg"
+      },
+       {
+        "Game Name": "Football studio dice",
+        "Game UID": "1909b4e3380dc37654f8e3997e63ec1b",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/5y7DpfLV/football-studio-dice-thumbnail-600x840-2023-04.jpg"
+    },
+    {
+        "Game Name": "Fan Tan",
+        "Game UID": "5cb6aa4e2ce1c775c568561401ffdfca",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/Y25PrDRM/fan-tan.jpg"
+    },
+
+    {
+        "Game Name": "Speed Roulette",
+        "Game UID": "b4af506243cafae52908e8fa266f8ff6",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/4yfmVQbc/speed-roulette.jpg"
+    },
+    {
+        "Game Name": "Craps",
+        "Game UID": "689dd8e8f17dae910dba9fdd4990d41e",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/pLbMSX3b/craps.jpg"
+    },
+    {
+        "Game Name": "Super Andar Bahar",
+        "Game UID": "f7b98e899461bdd49f92afc36b4c0db5",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/YSLyRCVD/andar-bahar.avif"
+    },
+   
     {
         "Game Name": "Playtech Lobby",
         "Game UID": "c38efc51028bd65f42396fa079c125d6",
         "Game Type": "CasinoLive",
-        "icon": "https://www.primeapi.com/cdn/gameRes/sq/350/PlaytechGameShowsLobby.jpg"
-    }
-    ,
-    {
-        "Game Name": "DreamGaming",
-        "Game UID": "8737e1ef982bd7ba41ec02c1823626f9",
-        "Game Type": "CasinoLive",
-        "icon": "https://www.khotsian.com/wp-content/uploads/2021/10/dreaming-khotsian.png"
+        "icon": "https://i.postimg.cc/T2jTjs2N/game-show.jpg"
     },
-    //  {
-    //     "Game Name": "First Person Dream Catcher",
-    //     "Game UID": "7ee0da50996278d7fe5136f86f368fa5",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Dream Catcher.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Dragon Tiger",
-    //     "Game UID": "4b4c45709dfd8188d7d6d12fae15bd42",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Dragon Tiger.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Mega Ball",
-    //     "Game UID": "3150b1cd8fbbddd94d36f20fab504653",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Mega Ball.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Lightning Baccarat",
-    //     "Game UID": "fec1b730e804bf14bd471a1e9b82bf44",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Lightning Baccarat.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Craps",
-    //     "Game UID": "823245918aa2afd108a5912e363c083c",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Craps.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Baccarat",
-    //     "Game UID": "e18dfa4a5dd4a0f2d8b45337bd6abb9d",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Baccarat.png"
-    //   },
-    //   {
-    //     "Game Name": "First Person Golden Wealth Baccarat",
-    //     "Game UID": "88e49e3fb9a9883f01f167d03f5efdcb",
-    //     "Game Type": "CasinoLive",
-    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/evoplay/First Person Golden Wealth Baccarat.png"
-    //   },
+    {
+        "Game Name": "Power Blackjack",
+        "Game UID": "1d1c0d3ec98deb128bdd5acdef0f157e",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/VNM9VrFD/power-blackjack-pid-11.jpg"
+    },
+   
+      {
+        "Game Name": "Infinite blackjack ",
+        "Game UID": "58d7089aa20bce7f70e0e2ce81e888f4",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/26YBzZyd/infinite-blackjack-poster-600x840.jpg"
+      },
+      {
+        "Game Name": "Dead or Alive: Saloon",
+        "Game UID": "eda1a2c5edb8370f8df58dcf8e1381b9",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/qBG9wHdD/dead-or-alive-saloon-portrait.avif"
+      },
+      {
+        "Game Name": "Caribbean Stud Poker",
+        "Game UID": "724eebd5cbe7555b01ed60279cb59e5a",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/bvsycNqN/carribean-stud.webp"
+      },
+      {
+        "Game Name": "Blackjack Silver B",
+        "Game UID": "8de1993b371ce298b85584d21e5d2106",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/MHmyVYM6/blackjack-silver-b.webp"
+      },
+      {
+        "Game Name": "Immersive Roulette",
+        "Game UID": "3b43390eebe1f1a84b15f1251a253b24",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/G2nmFn1L/immersive-roulette-poster-600x840.jpg"
+      },
+      {
+        "Game Name": "Baccarat B",
+        "Game UID": "0ea8519b837ebd62f5a8978acca33e1d",
+        "Game Type": "CasinoLive",
+        "icon": "https://i.postimg.cc/k4tt9PxR/baccat-b.jpg"
+      }
     //   {
     //     "Game Name": "First Person American Roulette",
     //     "Game UID": "88b2d98462fbc45d6d31e95083e183df",

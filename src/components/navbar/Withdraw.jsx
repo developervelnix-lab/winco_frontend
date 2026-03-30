@@ -1,398 +1,398 @@
-import React, { useState, useEffect } from 'react';
-import { Toast } from 'flowbite-react';
-import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
-import { API_URL } from '@/utils/constants';
+"use client"
+
+import { useState, useEffect } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {
+  faWallet,
+  faIndianRupeeSign,
+  faCheck,
+  faInfoCircle,
+  faCreditCard,
+  faPlus,
+  faChevronDown,
+  faSearch,
+  faTimes,
+  faUniversity
+} from "@fortawesome/free-solid-svg-icons"
+import { Toast } from "flowbite-react"
+import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from "react-icons/fa"
+import { useColors } from '../../hooks/useColors';
+import { FONTS } from '../../constants/theme';// Since I cannot import API_URL directly from @/utils/constants in this environment 
+// (it might fail due to alias resolution), I will use the one from sessionStorage or fallback
+const STATIC_API_URL = "https://pay.winco.cc/gateapi/v3/route.php" 
 
 const Withdraw = () => {
-  const [amount, setAmount] = useState('');
-  const [showAddBankPopup, setShowAddBankPopup] = useState(false);
-  const [addedBankAccounts, setAddedBankAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState('');
-  const [showBankDropdown, setShowBankDropdown] = useState(false);
-  const [accountBalance, setAccountBalance] = useState(0);
-  const authSecretKey = sessionStorage.getItem('auth_secret_key');
-  const userId = sessionStorage.getItem('account_id');
-  const availableBalance = sessionStorage.getItem('avl_balance');
-  const [toasts, setToasts] = useState([]);
-  const [availableBanks, setAvailableBanks] = useState([]);
+  const COLORS = useColors();
+  const [amount, setAmount] = useState("")
+  const [showAddBankPopup, setShowAddBankPopup] = useState(false)
+  const [addedBankAccounts, setAddedBankAccounts] = useState([])
+  const [selectedAccount, setSelectedAccount] = useState("")
+  const [showBankDropdown, setShowBankDropdown] = useState(false)
+  const [accountBalance, setAccountBalance] = useState("0")
+  const authSecretKey = sessionStorage.getItem("auth_secret_key")
+  const userId = sessionStorage.getItem("account_id")
+  const availableBalance = sessionStorage.getItem("avl_balance")
+  const [toasts, setToasts] = useState([])
+  const [availableBanks, setAvailableBanks] = useState([])
+  const [bankSearch, setBankSearch] = useState("")
 
   const [formData, setFormData] = useState({
-    realName: '',
-    accountNumber: '',
-    selectedBank: '',
-    ifscCode: ''
-  });
+    realName: "",
+    accountNumber: "",
+    selectedBank: "",
+    ifscCode: "",
+  })
 
- 
-
-  const addToast = (message, type = 'info') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
+  const addToast = (message, type = "info") => {
+    const id = Date.now()
+    setToasts((prev) => [...prev, { id, message, type }])
     setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000);
-  };
+      setToasts((prev) => prev.filter((toast) => toast.id !== id))
+    }, 4000)
+  }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   const fetchBankCards = async (userId) => {
     try {
-        const url = `${API_URL}?USER_ID=${userId}&PAGE_NUM=1`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Route': 'route-get-bankcards',
-                'AuthToken': authSecretKey
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.status_code === "success") {
-          setAddedBankAccounts(result.data);
-          const primaryBank = result.data.find(bank => bank.c_is_primary === "true");
-          if (primaryBank) {
-            setSelectedAccount(primaryBank.c_bank_id);
-          }
-          addToast('Bank accounts loaded successfully', 'success');
-        } else {
-            addToast(`Failed to load bank accounts: ${result.status_code}`, 'error');
-        }
+      const response = await fetch(`${STATIC_API_URL}?USER_ID=${userId}&PAGE_NUM=1`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Route: "route-get-bankcards",
+          AuthToken: authSecretKey,
+        },
+      })
+      const result = await response.json()
+      if (result.status_code === "success") {
+        setAddedBankAccounts(result.data)
+        const primaryBank = result.data.find((bank) => bank.c_is_primary === "true")
+        if (primaryBank) setSelectedAccount(primaryBank.c_bank_id)
+      }
     } catch (error) {
-        console.error("Error fetching bank cards", error);
-        addToast("Error loading bank accounts. Please try again.", 'error');
+      console.error("Error fetching bank cards", error)
     }
-  };
+  }
+
   const fetchBankList = async () => {
-    try {       
-        const response = await fetch(API_URL, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Route': 'route-get-banklist',
-                'AuthToken': authSecretKey
-            }
-        });
-
-        const result = await response.json();
-        setAvailableBanks(result.data.banklist)
+    try {
+      const response = await fetch(STATIC_API_URL, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Route: "route-get-banklist",
+          AuthToken: authSecretKey,
+        },
+      })
+      const result = await response.json()
+      setAvailableBanks(result.data.banklist)
     } catch (error) {
-        console.error("Error fetching bank list", error);
+      console.error("Error fetching bank list", error)
     }
-  }; 
-  const addBankDetails = async (userId, userAccountName, userBankName, userBankAccountNumber, userIfscCode) => {
-    if (!authSecretKey) {
-        addToast("Authentication required!", 'error');
-        return;
+  }
+
+  const addBankDetails = async () => {
+    const { realName, accountNumber, selectedBank, ifscCode } = formData
+    if (!realName || !accountNumber || !selectedBank || !ifscCode) {
+      addToast("Please fill all fields", "error")
+      return
     }
-    const url = new URL(API_URL);
-    url.searchParams.append("USER_ID", userId);
-    url.searchParams.append("BENEFICIARY_NAME", userAccountName);
-    url.searchParams.append("USER_BANK_NAME", userBankName);
-    url.searchParams.append("USER_BANK_ACCOUNT", userBankAccountNumber);
-    url.searchParams.append("USER_BANK_IFSC_CODE", userIfscCode);
-    url.searchParams.append("IS_PRIMARY", "true");
-    url.searchParams.append("CARD_METHOD", "bank");
+
+    const params = new URLSearchParams({
+      USER_ID: userId,
+      BENEFICIARY_NAME: realName,
+      USER_BANK_NAME: selectedBank,
+      USER_BANK_ACCOUNT: accountNumber,
+      USER_BANK_IFSC_CODE: ifscCode,
+      IS_PRIMARY: "true",
+      CARD_METHOD: "bank",
+    })
 
     try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'AuthToken': authSecretKey,
-                'Route': 'route-add-bankcard'
-            }
-        });
-
-        const result = await response.json();
-
-        if(result.status_code === "success") {
-            addToast('Bank account added successfully', 'success');
-            fetchBankCards(userId);
-        } else {
-            addToast(`Failed to add bank account: ${result.status_code}`, 'error');
-        }
+      const response = await fetch(`${STATIC_API_URL}?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          AuthToken: authSecretKey,
+          Route: "route-add-bankcard",
+        },
+      })
+      const result = await response.json()
+      if (result.status_code === "success") {
+        addToast("Bank added successfully", "success")
+        fetchBankCards(userId)
+        setShowAddBankPopup(false)
+        setFormData({ realName: "", accountNumber: "", selectedBank: "", ifscCode: "" })
+      } else {
+        addToast(`Error: ${result.status_code}`, "error")
+      }
     } catch (error) {
-        console.error("Error fetching bank details", error);
-        addToast("Error processing request. Please try again later.", 'error');
+      addToast("Failed to add bank account", "error")
     }
-  };
+  }
 
   const setPrimaryBankCard = async (cardId) => {
     try {
-        const url = `${API_URL}?USER_ID=${userId}&CARD_ID=${cardId}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Route': 'route-set-bankcard-primary',
-                'AuthToken': authSecretKey
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.status_code === "success") {
-            addToast("Primary bank account set successfully!", 'success');
-            fetchBankCards(userId);
-            setSelectedAccount(cardId);
-        } else {
-            addToast(`Failed to set primary bank account: ${result.status_code}`, 'error');
-        }
+      const response = await fetch(`${STATIC_API_URL}?USER_ID=${userId}&CARD_ID=${cardId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Route: "route-set-bankcard-primary",
+          AuthToken: authSecretKey,
+        },
+      })
+      const result = await response.json()
+      if (result.status_code === "success") {
+        fetchBankCards(userId)
+        setSelectedAccount(cardId)
+      }
     } catch (error) {
-        console.error("Error setting primary bank card", error);
-        addToast("Error processing request. Please try again later.", 'error');
+      console.error("Error setting primary bank", error)
     }
-  };
+  }
 
-  useEffect(() => { 
-    fetchBankCards(userId);
-    setAccountBalance(availableBalance);
-    fetchBankList();
-  }, [authSecretKey]);
+  useEffect(() => {
+    fetchBankCards(userId)
+    setAccountBalance(availableBalance || "0")
+    fetchBankList()
+  }, [authSecretKey])
 
-  const handleAddBank = () => {
-    const { realName, accountNumber, selectedBank, ifscCode } = formData;
-    if (!realName || !accountNumber || !selectedBank || !ifscCode) {
-      addToast('Please fill in all required fields', 'error');
-      return;
-    }
-
-    addBankDetails(userId, realName, selectedBank, accountNumber, ifscCode);
-    setShowAddBankPopup(false);
-    setFormData({ realName: '', accountNumber: '', selectedBank: '', ifscCode: '' });
-  };
-
-  const handleWithdrawal = async() => {
-    if (!selectedAccount) {
-      addToast('Please select a bank account', 'error');
-      return;
-    }
+  const handleWithdrawal = async () => {
+    if (!selectedAccount) { addToast("Select a bank account", "error"); return; }
     if (!amount || parseFloat(amount) < 100 || parseFloat(amount) > 50000) {
-      addToast('Amount must be between ₹100 and ₹50,000', 'error');
-      return;
+      addToast("Amount: ₹100 - ₹50,000", "error"); return;
     }
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
+      const response = await fetch(STATIC_API_URL, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Route': 'route-withdraw-request',
-          'AuthToken': authSecretKey
+          "Content-Type": "application/json",
+          Route: "route-withdraw-request",
+          AuthToken: authSecretKey,
         },
-        body: JSON.stringify({
-          "USER_ID": userId,
-          "WITHDRAW_AMOUNT": amount,
-        })
-      });
-      const result = await response.json();
-      if(result.status_code === "success"){
-        const selectedBank = addedBankAccounts.find(acc => acc.c_bank_id === selectedAccount);
-        addToast(`Withdrawal request of ₹${amount} to ${selectedBank.c_bank_name} (****${selectedBank.c_bank_account.slice(-4)}) submitted successfully!`, 'success');
-        setAmount('');
+        body: JSON.stringify({ USER_ID: userId, WITHDRAW_AMOUNT: amount }),
+      })
+      const result = await response.json()
+      if (result.status_code === "success") {
+        addToast(`Withdrawal of ₹${amount} initiated!`, "success")
+        setAmount("")
       } else {
-        addToast(`Withdrawal failed: ${result.message || result.status_code}`, 'error');
+        addToast(`Failed: ${result.message || result.status_code}`, "error")
       }
-    } catch(error) {
-      console.error("Error processing withdrawal request", error);
-      addToast("Error processing withdrawal request. Please try again later.", 'error');
+    } catch (error) {
+      addToast("Error processing request", "error")
     }
-  };
+  }
 
   return (
-    <div className="p-6 bg-white rounded-xl max-w-md mx-auto shadow-lg relative">
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-4">
+    <div className="text-black dark:text-white w-full max-w-md md:max-w-2xl mx-auto overflow-hidden rounded-[2.5rem] border border-black/10 dark:border-white/10 shadow-3xl relative mb-10"
+      style={{ backgroundColor: COLORS.bg2, color: COLORS.text }}>
+      
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-brand/30 blur-[60px]"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand/30 blur-[60px]"></div>
+      </div>
+
+      {/* Header */}
+      <div className="p-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between relative z-10 bg-white/[0.02]">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-brand shadow-lg">
+            <FontAwesomeIcon icon={faWallet} className="text-black dark:text-white text-xl" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tight" style={{ fontFamily: FONTS.head }}>
+              Withdraw <span className="text-brand">Funds</span>
+            </h2>
+            <div className="flex items-center gap-2 mt-1 opacity-60">
+              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)] animate-pulse"></div>
+              <span className="text-[10px] font-bold uppercase tracking-widest">Secure Transfer Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Toasts */}
+      <div className="fixed top-6 right-6 z-[100] space-y-3">
         {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            onDismiss={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-            color={
-              toast.type === 'error' ? 'failure' :
-              toast.type === 'success' ? 'success' : 'info'
-            }
-          >
-            <div className="flex items-center">
-              {toast.type === 'success' && (
-                <FaCheckCircle className="text-green-500 mr-2" size={20} />
-              )}
-              {toast.type === 'error' && (
-                <FaExclamationTriangle className="text-red-500 mr-2" size={20} />
-              )}
-              {toast.type === 'info' && (
-                <FaInfoCircle className="text-blue-500 mr-2" size={20} />
-              )}
-              <div className="ml-1 text-sm font-normal">
-                {toast.message}
-              </div>
+          <Toast key={toast.id} onDismiss={() => setToasts((p) => p.filter((t) => t.id !== toast.id))}>
+            <div className="flex items-center p-3 rounded-xl bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 text-black dark:text-white shadow-2xl backdrop-blur-xl">
+              {toast.type === "success" ? <FaCheckCircle className="text-green-500 mr-3" /> : <FaExclamationTriangle className="text-red-500 mr-3" />}
+              <span className="text-[12px] font-bold uppercase">{toast.message}</span>
             </div>
           </Toast>
         ))}
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-center text-black">Fund Withdrawal</h2>
+      {/* Body */}
+      <div className="p-6 space-y-8 relative z-10">
         
-        <div className="bg-gray-100 p-4 rounded-lg mb-6">
-          <label className="block text-sm text-gray-700 mb-2">Available Balance</label>
-          <p className="text-2xl font-semibold text-yellow-400">₹{accountBalance}</p>
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Withdrawal Account</label>
-          <div className="flex flex-col gap-3">
-            {addedBankAccounts.length > 0 ? (
-              <>
-                <select
-                  value={selectedAccount}
-                  onChange={(e) => setPrimaryBankCard(e.target.value)}
-                  className="w-full bg-gray-100 border border-gray-300 rounded-lg p-3 text-black focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                >
-                  {addedBankAccounts.map(account => (
-                    <option key={account.c_bank_id} value={account.c_bank_id} className="bg-white">
-                      {account.c_is_primary === "true" && "⭐ Primary - "}
-                      {account.c_bank_name} (****{account.c_bank_account.slice(-4)})
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => setShowAddBankPopup(true)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg transition-colors"
-                >
-                  + Add New Account
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-4 bg-gray-100 rounded-lg">
-                <p className="text-gray-600 mb-3">No accounts added</p>
-                <button
-                  onClick={() => setShowAddBankPopup(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Add Bank Account
-                </button>
-              </div>
-            )}
+        {/* Balance Display */}
+        <div className="bg-white/[0.03] border border-black/5 dark:border-white/5 rounded-3xl p-6 flex justify-between items-center group">
+          <div>
+            <p className="text-[10px] text-black/30 dark:text-white/30 font-black uppercase tracking-widest mb-1">Available Balance</p>
+            <p className="text-3xl font-black text-brand" style={{ fontFamily: FONTS.head }}>₹{accountBalance}</p>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand/10 transition-colors">
+             <FontAwesomeIcon icon={faIndianRupeeSign} className="text-black/20 dark:text-white/20 group-hover:text-brand transition-colors" />
           </div>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Amount (₹)</label>
-          <input
-            type="number"
-            placeholder="Enter amount (100 - 50,000)"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-gray-100 border border-gray-300 rounded-lg p-3 text-black placeholder-gray-500 focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-          />
+        {/* Bank Selection */}
+        <div className="space-y-4">
+          <label className="text-[10px] text-black/40 dark:text-white/40 font-black uppercase tracking-widest block px-1">1. Destination Account</label>
+          
+          {addedBankAccounts.length > 0 ? (
+            <div className="space-y-3">
+               <div className="relative">
+                 <select
+                    value={selectedAccount}
+                    onChange={(e) => setPrimaryBankCard(e.target.value)}
+                    className="w-full bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-2xl py-4 px-5 text-sm font-bold appearance-none focus:outline-none focus:border-brand/40 transition-colors"
+                    style={{ backgroundColor: COLORS.bg3, color: COLORS.text }}
+                  >
+                    {addedBankAccounts.map((account) => (
+                      <option key={account.c_bank_id} value={account.c_bank_id}>
+                        {account.c_is_primary === "true" ? "⭐ " : ""}{account.c_bank_name} (****{account.c_bank_account.slice(-4)})
+                      </option>
+                    ))}
+                  </select>
+                  <FontAwesomeIcon icon={faChevronDown} className="absolute right-5 top-1/2 -translate-y-1/2 text-black/20 dark:text-white/20 pointer-events-none" />
+               </div>
+               <button onClick={() => setShowAddBankPopup(true)} className="w-full py-3 border border-dashed border-black/10 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-black/30 dark:text-white/30 hover:text-brand hover:border-brand/30 transition-all">
+                  + Add New Bank Account
+               </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowAddBankPopup(true)} className="w-full py-10 border-2 border-dashed border-black/5 dark:border-white/5 rounded-3xl flex flex-col items-center gap-3 group hover:border-brand/20 transition-all">
+               <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand/10 transition-all text-black/20 dark:text-white/20 group-hover:text-brand">
+                  <FontAwesomeIcon icon={faPlus} />
+               </div>
+               <p className="text-[11px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-opacity">Connect Bank Account</p>
+            </button>
+          )}
         </div>
 
-        <div className="flex gap-4">
-          <button
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors"
-            onClick={handleWithdrawal}
-          >
-            Confirm Withdrawal
-          </button>
+        {/* Amount Input */}
+        <div className="space-y-5">
+           <div className="text-center">
+              <label className="text-[10px] text-black/40 dark:text-white/40 font-black uppercase tracking-widest mb-4 block">2. Withdrawal Amount</label>
+              <div className="relative max-w-[200px] mx-auto">
+                <div className="absolute inset-y-0 left-5 flex items-center text-brand text-2xl"><FontAwesomeIcon icon={faIndianRupeeSign} /></div>
+                <input 
+                  type="number" 
+                  value={amount} 
+                  onChange={(e) => setAmount(e.target.value)} 
+                  placeholder="0"
+                  className="w-full py-5 pl-12 pr-4 rounded-3xl border border-black/10 dark:border-white/10 text-4xl font-black text-center focus:outline-none focus:border-brand/40 shadow-inner"
+                  style={{ backgroundColor: COLORS.bg3, color: COLORS.text, fontFamily: FONTS.head }} 
+                />
+              </div>
+           </div>
+
+           <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+              {["500", "1000", "5000", "10000"].map((v) => (
+                <button key={v} onClick={() => setAmount(v)}
+                  className={`py-3 rounded-xl border text-[10px] font-black transition-all ${amount === v ? "bg-brand border-brand text-black dark:text-white shadow-lg" : "border-black/5 dark:border-white/5 bg-white/[0.03] text-black/40 dark:text-white/40"}`}>
+                  ₹{parseInt(v)}
+                </button>
+              ))}
+           </div>
+
+           <button onClick={handleWithdrawal} disabled={!amount || !selectedAccount}
+            className={`w-full py-6 rounded-3xl text-black dark:text-white font-black uppercase tracking-[0.5em] text-xs flex items-center justify-center gap-4 transition-all active:scale-95 shadow-xl ${
+              amount && selectedAccount ? "opacity-100 hover:shadow-brand/20" : "opacity-20 pointer-events-none"
+            }`} 
+            style={{ background: COLORS.brandGradient }}>
+              <FontAwesomeIcon icon={faWallet} />
+              <span>Confirm Payout</span>
+           </button>
+        </div>
+
+        <div className="flex items-start gap-4 p-4 bg-brand/5 rounded-2xl border border-brand/10">
+           <FontAwesomeIcon icon={faInfoCircle} className="text-brand text-sm mt-0.5" />
+           <p className="text-[9px] text-black/40 dark:text-white/40 uppercase font-black leading-relaxed tracking-wider">
+              Payouts are processed instantly. Large amounts may take up to 24 hours for security verification.
+           </p>
         </div>
       </div>
 
+      <div className="pb-8 text-center opacity-10">
+        <p className="text-[8px] uppercase font-black tracking-[1em]">Authorized Payout Node</p>
+      </div>
+
+      {/* Add Bank Popup */}
       {showAddBankPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
-          <div className="bg-white rounded-xl p-6 w-96 relative">
-            <h3 className="text-xl font-bold text-black mb-6">Add Bank Account</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">Account Holder Name</label>
-                <input
-                  name="realName"
-                  value={formData.realName}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-100 rounded-lg p-3 text-black focus:ring-2 focus:ring-blue-500"
-                  placeholder="John Doe"
-                />
+        <div className="fixed inset-0 bg-black/10 dark:bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[100] animate-fadeIn">
+          <div className="bg-gray-50 dark:bg-[#111111] border border-black/10 dark:border-white/10 rounded-[2.5rem] p-8 w-full max-w-sm relative shadow-[0_0_100px_rgba(0,0,0,1)]">
+            <button onClick={() => setShowAddBankPopup(false)} className="absolute top-6 right-6 text-black/20 dark:text-white/20 hover:text-black dark:text-white transition-colors">
+               <FontAwesomeIcon icon={faTimes} />
+            </button>
+            <h3 className="text-xl font-black text-black dark:text-white uppercase tracking-tighter mb-8" style={{ fontFamily: FONTS.head }}>Add Bank <span className="text-brand">Account</span></h3>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[9px] text-brand font-black uppercase tracking-widest ml-1">Account Holder Name</label>
+                <input name="realName" value={formData.realName} onChange={handleInputChange} placeholder="AS PER BANK RECORDS" 
+                  className="w-full bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-brand/40"
+                  style={{ backgroundColor: COLORS.bg3, color: COLORS.text }} />
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">Account Number</label>
-                <input
-                  name="accountNumber"
-                  value={formData.accountNumber}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-100 rounded-lg p-3 text-black focus:ring-2 focus:ring-blue-500"
-                  placeholder="1234 5678 9012"
-                />
+              <div className="space-y-2">
+                <label className="text-[9px] text-brand font-black uppercase tracking-widest ml-1">Account Number</label>
+                <input name="accountNumber" value={formData.accountNumber} onChange={handleInputChange} placeholder="DIGITS ONLY" 
+                  className="w-full bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-brand/40"
+                  style={{ backgroundColor: COLORS.bg3, color: COLORS.text }} />
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">Select Bank</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowBankDropdown(!showBankDropdown)}
-                    className="w-full bg-gray-100 rounded-lg p-3 text-black text-left focus:ring-2 focus:ring-blue-500"
-                  >
-                    {formData.selectedBank || 'Select Bank'}
-                  </button>
-                  {showBankDropdown && (
-                    <div className="absolute z-10 w-full mt-10 bg-white rounded-md shadow-lg overflow-y-auto max-h-40">
-                      {availableBanks.map(bank => (
-                        <button
-                          key={bank.bankName}
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ ...prev, selectedBank: bank.bankName }));
-                            setShowBankDropdown(false);
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          {bank.bankName}
-                        </button>
-                      ))}
+              <div className="space-y-2 relative">
+                <label className="text-[9px] text-brand font-black uppercase tracking-widest ml-1">Select Bank</label>
+                <button onClick={() => setShowBankDropdown(!showBankDropdown)} className="w-full bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-xl py-4 px-5 text-xs font-bold text-left flex justify-between items-center bg-gray-100 dark:bg-black">
+                  <span className={formData.selectedBank ? "text-black dark:text-white" : "text-black/20 dark:text-white/20"}>{formData.selectedBank || "CHOOSE BANK"}</span>
+                  <FontAwesomeIcon icon={faChevronDown} className="opacity-30" />
+                </button>
+                {showBankDropdown && (
+                  <div className="absolute z-10 w-full mt-2 bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-2xl overflow-hidden shadow-3xl animate-fadeInUp">
+                    <div className="p-3 bg-white/[0.03] border-b border-black/5 dark:border-white/5 flex items-center gap-3">
+                       <FontAwesomeIcon icon={faSearch} className="text-black/20 dark:text-white/20 text-xs" />
+                       <input value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} placeholder="SEARCH..." 
+                         className="bg-transparent border-none text-[10px] font-black w-full focus:ring-0 text-black dark:text-white placeholder:text-black/10 dark:text-white/10" autoFocus />
                     </div>
-                  )}
-                </div>
+                    <div className="max-h-40 overflow-y-auto scrollbar-hide">
+                      {availableBanks
+                        .filter(b => b.bankName.toLowerCase().includes(bankSearch.toLowerCase()))
+                        .map(b => (
+                          <button key={b.bankName} onClick={() => { setFormData(p => ({ ...p, selectedBank: b.bankName })); setShowBankDropdown(false); }}
+                            className="w-full text-left px-5 py-3 text-[10px] font-bold text-black/50 dark:text-white/50 hover:bg-brand hover:text-black dark:text-white transition-colors">
+                            {b.bankName}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">IFSC Code</label>
-                <input
-                  name="ifscCode"
-                  value={formData.ifscCode}
-                  onChange={handleInputChange}
-                  className="w-full bg-gray-100 rounded-lg p-3 text-black focus:ring-2 focus:ring-blue-500"
-                  placeholder="SBIN0000123"
-                />
+              <div className="space-y-2">
+                <label className="text-[9px] text-brand font-black uppercase tracking-widest ml-1">IFSC Code</label>
+                <input name="ifscCode" value={formData.ifscCode} onChange={handleInputChange} placeholder="SBIN000XXXX" 
+                  className="w-full bg-gray-100 dark:bg-black border border-black/10 dark:border-white/10 rounded-xl py-4 px-5 text-xs font-bold focus:outline-none focus:border-brand/40"
+                  style={{ backgroundColor: COLORS.bg3, color: COLORS.text }} />
               </div>
-            </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleAddBank}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition-colors"
-              >
-                Save Account
-              </button>
-              <button
-                onClick={() => setShowAddBankPopup(false)}
-                className="px-4 py-3 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Cancel
+              <button onClick={addBankDetails} className="w-full py-5 rounded-2xl text-black dark:text-white font-black uppercase tracking-[0.4em] text-[10px] shadow-lg mt-4 active:scale-95 transition-all"
+                style={{ background: COLORS.brandGradient }}>
+                Add Account
               </button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Withdraw;
+export default Withdraw

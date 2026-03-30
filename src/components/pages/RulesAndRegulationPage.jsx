@@ -1,17 +1,17 @@
 import React from 'react'
 import RulesAndRegulation from '../sidebar-components/legal-complience/RulesAndRegulation'
 import Navbar from '../navbar/Navbar'
-
+import { useColors } from '../../hooks/useColors';
 function RulesAndRegulationPage() {
-    return (
-
-        <>
-            <Navbar />
-            <div className='mt-[112px]'>
-                <RulesAndRegulation />
-            </div>
-        </>
-    )
+  const COLORS = useColors();
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
+      <Navbar />
+      <div className='pb-10 px-2'>
+        <RulesAndRegulation />
+      </div>
+    </div>
+  )
 }
 
 export default RulesAndRegulationPage

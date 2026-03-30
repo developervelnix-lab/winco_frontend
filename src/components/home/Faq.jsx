@@ -1,42 +1,97 @@
 import React, { useState } from "react";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaChevronDown, FaQuestionCircle, FaLightbulb } from "react-icons/fa";
 import { ranabook } from "../jsondata/info";
+import { useColors } from '../../hooks/useColors';
+import { FONTS } from '../../constants/theme';
 
-const AccordionItem = ({ title, content, isOpen, toggle }) => {
+const AccordionItem = ({ title, content, isOpen, toggle, index }) => {
+  const COLORS = useColors();
   return (
-    <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className={`group relative transition-all duration-500 rounded-2xl overflow-hidden border ${
+        isOpen ? 'shadow-[0_0_40px_rgba(0,0,0,0.3)]' : 'shadow-lg'
+      }`}
+      style={{ 
+        borderColor: isOpen ? `${COLORS.brand}40` : COLORS.bg4,
+        backgroundColor: isOpen ? COLORS.bg2 : COLORS.bg3
+      }}
+    >
+      {/* Light Sweep Effect on Hover */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent transform -skew-x-12 transition-all duration-1000 group-hover:left-[200%]"></div>
+      </div>
+
+      {/* Backdrop Blur */}
+      <div className="absolute inset-0 backdrop-blur-2xl -z-10"></div>
+
       {/* Header */}
       <button
         onClick={toggle}
-        className="flex items-center justify-between w-full px-2 py-2 text-base font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+        className="relative z-10 flex items-center justify-between w-full px-3 md:px-5 py-3 md:py-4 text-left transition-all hover:bg-white/[0.02]"
       >
-        <span className="text-xm">{title}</span>
-        {isOpen ? <FaChevronUp className="text-blue-500" /> : <FaChevronDown className="text-blue-500" />}
+        <div className="flex items-center gap-2">
+          <div 
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${isOpen ? 'scale-150' : 'opacity-20'}`}
+            style={{ backgroundColor: COLORS.brand, boxShadow: isOpen ? `0 0 10px ${COLORS.brand}` : 'none' }}
+          ></div>
+          <span 
+            className="text-[8px] sm:text-[9px] md:text-xs font-black uppercase tracking-wider transition-colors duration-300 flex-1"
+            style={{ color: isOpen ? COLORS.text : COLORS.muted }}
+          >
+            {title}
+          </span>
+        </div>
+        <motion.div 
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          className={`p-2 rounded-xl border border-black/5 dark:border-white/5 flex items-center justify-center transition-all duration-300`}
+          style={{ 
+            backgroundColor: isOpen ? `${COLORS.brand}20` : COLORS.bg4,
+            color: isOpen ? COLORS.brand : COLORS.muted
+          }}
+        >
+          <FaChevronDown className="w-2.5 h-2.5" />
+        </motion.div>
       </button>
 
       {/* Content */}
-      <div
-        className={`transition-all duration-300 overflow-hidden ${
-          isOpen ? "max-h-48 opacity-100 px-5 py-3 text-xm" : "max-h-0 opacity-0"
-        }`}
-      >
-        <p className="text-gray-700 dark:text-gray-300">{content}</p>
-      </div>
-    </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="px-3 md:px-5 pb-3 md:pb-4 flex gap-2 md:gap-3">
+              <div className="w-[1px] bg-gradient-to-b from-brand/50 to-transparent mt-1"></div>
+              <div className="text-[7.5px] sm:text-[8px] md:text-[11px] leading-relaxed font-bold uppercase tracking-widest pt-1 md:pt-2" style={{ color: COLORS.titanium }}>
+                {content}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
 const Faq = () => {
-  const [openIndex, setOpenIndex] = useState(null);
+  const COLORS = useColors();
+  const [openIndex, setOpenIndex] = useState(0);
 
   const faqs = [
     {
-      title: ` Why is Kolor Bet one of the best online betting sites in India?`,
-      content: "Kolor Bet is a trusted betting platform offering fast transactions and secure gaming experiences.",
+      title: "Why is this one of the best online betting sites in India?",
+      content: "This is a trusted betting platform offering fast transactions and secure gaming experiences.",
     },
     {
       title: "Is online betting legal in India?",
-      content: "Betting laws vary by state. Always check your local regulations before participating.",
+      content: "Betting laws vary by state. Always check your local regulations before participating..",
     },
     {
       title: "How do I withdraw my winnings?",
@@ -53,16 +108,46 @@ const Faq = () => {
   ];
 
   return (
-    <div className="flex justify-center w-full"> {/* Center horizontally */}
-      <div className="max-w-3xl w-full p-4"> {/* Added w-full */}
-        <h2 className="text-xl font-serif text-center text-gray-900 dark:text-white mb-4">
-          Frequently Asked Questions (FAQs)
-        </h2>
+    <section className="relative py-2 md:py-4 overflow-hidden" style={{ backgroundColor: COLORS.bg }}>
+      {/* Visual Depth Architecture */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-5xl h-96 bg-brand/5 rounded-full blur-[150px] pointer-events-none opacity-30"></div>
+      
+      <div className="max-w-3xl mx-auto px-4 md:px-6 relative z-10">
+        <div className="flex flex-col items-center mb-8 md:mb-12 text-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 md:gap-3 px-3 md:px-4 py-1.5 rounded-full bg-white/[0.03] border border-black/10 dark:border-white/10 mb-5 md:mb-6"
+          >
+             <FaLightbulb className="w-2 md:w-2.5 h-2 md:h-2.5 text-brand" />
+             <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-black/60 dark:text-white/60">Knowledge Base</span>
+          </motion.div>
+          
+          <motion.h2 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-base sm:text-lg md:text-xl font-black text-black dark:text-white mb-6 md:mb-8 uppercase tracking-[0.1em] md:tracking-[0.2em]"
+            style={{ fontFamily: FONTS.head || 'Anton, sans-serif' }}
+          >
+            FREQUENTLY ASKED <span className="inline-block text-transparent bg-clip-text bg-gradient-to-b from-brand to-brand/60" style={{ backgroundImage: `linear-gradient(to bottom, ${COLORS.brandLight || COLORS.brand}, ${COLORS.brand})` }}>QUESTIONS (FAQ)</span>
+          </motion.h2>
+          
+          <motion.div 
+            initial={{ width: 0 }}
+            whileInView={{ width: 80 }}
+            viewport={{ once: true }}
+            className="h-1.5 rounded-full"
+            style={{ background: COLORS.brandGradient }}
+          ></motion.div>
+        </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5 md:space-y-3">
           {faqs.map((faq, index) => (
             <AccordionItem
               key={index}
+              index={index}
               title={faq.title}
               content={faq.content}
               isOpen={openIndex === index}
@@ -71,7 +156,10 @@ const Faq = () => {
           ))}
         </div>
       </div>
-    </div>
+
+      {/* Digital Stardust Texture */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.02] pointer-events-none"></div>
+    </section>
   );
 };
 

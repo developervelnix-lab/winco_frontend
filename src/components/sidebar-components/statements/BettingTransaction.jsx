@@ -1,30 +1,19 @@
-/*
-  Author: DevKilla
-  Buy Code From: jinkteam.com
-  Contact: @devkilla (Telegram)
-*/
-
-
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FaHistory, FaSearch, FaCheckCircle, FaExclamationTriangle, FaChartLine } from "react-icons/fa";
 import { API_URL } from "@/utils/constants";
+import { useColors } from '../../../hooks/useColors';
+import { FONTS } from '../../../constants/theme';
+import RoundDetailsModal from './RoundDetailsModal';
 
 const BettingTransactionPage = () => {
-  const [startDate, setStartDate] = useState("05/03/2025");
-  const [endDate, setEndDate] = useState("12/03/2025");
+  const COLORS = useColors();
   const [activeFilter, setActiveFilter] = useState("Last 7 Days");
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [currentStartMonth, setCurrentStartMonth] = useState(new Date(2025, 2, 5));
-  const [currentEndMonth, setCurrentEndMonth] = useState(new Date(2025, 2, 12));
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showTransactions, setShowTransactions] = useState(false);
-
-  const startDatePickerRef = useRef(null);
-  const endDatePickerRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const authSecretKey = sessionStorage.getItem("auth_secret_key");
   const userId = sessionStorage.getItem("account_id");
@@ -40,9 +29,7 @@ const BettingTransactionPage = () => {
           AuthToken: authSecretKey,
         },
       });
-
       const result = await response.json();
-      console.log("Fetched Game Data:", result.data);
       return result.data;
     } catch (error) {
       console.error("Error fetching game data", error);
@@ -59,125 +46,179 @@ const BettingTransactionPage = () => {
 
   const handleFilterClick = (filter) => {
     setActiveFilter(filter);
-    const today = new Date();
-    const startDateObj = new Date();
-
-    if (filter === "Last 7 Days") startDateObj.setDate(today.getDate() - 7);
-    else if (filter === "Last 14 Days") startDateObj.setDate(today.getDate() - 14);
-    else if (filter === "Last 28 Days") startDateObj.setDate(today.getDate() - 28);
-
-    setStartDate(formatDate(startDateObj));
-    setEndDate(formatDate(today));
-    setCurrentStartMonth(new Date(startDateObj));
-    setCurrentEndMonth(new Date(today));
-    setShowTransactions(true);
   };
 
-  const formatDate = (date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+  const filteredTransactions = transactions.filter((t) =>
+    t.r_match_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (t.r_selection && t.r_selection.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen p-4 sm:p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-red-800">
-          Betting Transactions
-        </h1>
+    <div className="w-[98%] max-w-6xl mx-auto overflow-hidden rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl relative mb-2"
+      style={{ backgroundColor: COLORS.bg2, color: COLORS.text }}>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {["Last 7 Days", "Last 14 Days", "Last 28 Days"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => handleFilterClick(filter)}
-              className={`px-4 py-2 border rounded-lg transition-all duration-300 ${
-                activeFilter === filter
-                  ? "bg-gradient-to-r from-red-600 to-red-700 text-white border-red-700 shadow-md"
-                  : "bg-white text-black border-gray-400 hover:bg-red-50"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand/30 blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand/30 blur-[100px]"></div>
+      </div>
+
+      {/* Header */}
+      <div className="p-3 md:p-4 border-b border-black/5 dark:border-white/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10 bg-white/[0.02]">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-lg text-black dark:text-white text-base md:text-lg"
+              style={{ background: COLORS.brandGradient }}>
+              <FaChartLine />
+            </div>
+            <div className="flex items-baseline gap-2 flex-nowrap">
+              <h2 className="text-base md:text-lg font-black uppercase tracking-tight whitespace-nowrap" style={{ fontFamily: FONTS.head }}>
+                Betting <span style={{ color: COLORS.brand }}>P&L</span>
+              </h2>
+              <span className="text-[7.5px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30 whitespace-nowrap">Profit & Loss Table</span>
+            </div>
+          </div>
+
+          {/* Search Input - Now placed after logo and title in the same row */}
+          <div className="relative w-full md:w-44 group">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-black/40 dark:text-white/20 group-focus-within:text-brand transition-colors text-[9px]" />
+            <input 
+              type="text"
+              placeholder="SEARCH GAME..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-2 py-1 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-black dark:text-white text-[7.5px] font-black uppercase tracking-widest placeholder-black/30 dark:placeholder-white/30 focus:outline-none focus:border-brand/40 focus:ring-1 focus:ring-brand/20 transition-all shadow-inner"
+              style={{ fontFamily: FONTS.ui }}
+            />
+          </div>
         </div>
 
-        {/* Transactions List */}
-        {transactions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-            {transactions.map((transaction, index) => (
-              <div
-                key={index}
-                className="bg-white shadow-lg rounded-xl overflow-hidden transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-              >
-                <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-bold">{transaction.r_match_name}</h3>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        transaction.r_match_status === "loss" ? "bg-red-500" : "bg-green-500"
-                      }`}
-                    >
-                      {transaction.r_match_status.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-gray-300 text-sm mt-1">
-                    {transaction.r_date} • {transaction.r_time}
-                  </p>
-                </div>
-                <div className="p-5">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Amount:</span>
-                      <span className="font-semibold">₹{transaction.r_match_amount}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Bet:</span>
-                      <span className="font-semibold">₹{transaction.r_match_bet}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Profit:</span>
-                      <span
-                        className={`font-bold ${
-                          transaction.r_match_status === "loss" ? "text-red-600" : "text-green-600"
-                        }`}
-                      >
-                        ₹{transaction.r_match_profit}
+        <div className="flex items-center gap-3">
+          {/* Date Filter Dropdown - Space Saving */}
+          <div className="relative group min-w-[100px]">
+            <select
+              value={activeFilter}
+              onChange={(e) => handleFilterClick(e.target.value)}
+              className="w-full appearance-none px-3 py-1.5 pr-8 rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/[0.03] text-black dark:text-white text-[7px] font-black uppercase tracking-widest cursor-pointer focus:outline-none focus:border-brand/40 transition-all hover:bg-black/10 dark:hover:bg-white/10 shadow-sm"
+              style={{ fontFamily: FONTS.ui }}
+            >
+              {["Last 7 Days", "Last 14 Days", "Last 28 Days"].map((filter) => (
+                <option key={filter} value={filter} className="bg-gray-900 text-white">
+                  {filter}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[8px] text-brand">
+              ▼
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Content */}
+      <div className="p-4 md:p-5 relative z-10 overflow-x-auto scrollbar-hide">
+        {filteredTransactions.length > 0 ? (
+          <div className="min-w-[800px]">
+            <table className="w-full text-left border-separate border-spacing-y-1.5">
+              <thead>
+                <tr className="text-black/30 dark:text-white/30 text-[8px] font-black uppercase tracking-widest">
+                  <th className="px-4 py-3">S.No</th>
+                  <th className="px-4 py-3">Game Name</th>
+                  <th className="px-4 py-3">Provider</th>
+                  <th className="px-4 py-3">Bet Amount</th>
+                  <th className="px-4 py-3">Date & Time</th>
+                  <th className="px-4 py-3">Selection</th>
+                  <th className="px-4 py-3 text-right">Result</th>
+                </tr>
+              </thead>
+              <tbody className="space-y-2">
+                {filteredTransactions.map((transaction, index) => (
+                  <tr 
+                    key={index} 
+                    className="bg-black/10 dark:bg-black/40 border border-black/5 dark:border-white/5 hover:bg-white/[0.02] transition-colors group"
+                  >
+                    <td className="px-4 py-3 rounded-l-xl border-y border-l border-black/5 dark:border-white/5">
+                      <span className="text-[9px] font-black text-black/40 dark:text-white/40">{index + 1}</span>
+                    </td>
+                    <td className="px-4 py-3 border-y border-black/5 dark:border-white/5">
+                      <div className="flex flex-col">
+                        <button 
+                          onClick={() => { setSelectedTx(transaction); setIsModalOpen(true); }}
+                          className="text-[11px] font-black text-black dark:text-white uppercase tracking-wide hover:text-brand transition-colors text-left group-hover:translate-x-1 duration-300" 
+                          style={{ fontFamily: FONTS.head }}
+                        >
+                          {transaction.r_match_name}
+                        </button>
+                        <span className="text-[7px] font-bold text-black/20 dark:text-white/20 uppercase">Match Record</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-y border-black/5 dark:border-white/5">
+                      <span className="text-[9px] font-black text-black/40 dark:text-white/40 uppercase tracking-widest">
+                        {transaction.r_provider || "Standard"}
                       </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </td>
+                    <td className="px-4 py-3 border-y border-black/5 dark:border-white/5">
+                      <span className="text-[11px] font-black text-black dark:text-white" style={{ fontFamily: FONTS.head }}>
+                        ₹{transaction.r_match_bet || transaction.r_match_amount}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 border-y border-black/5 dark:border-white/5">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-black/60 dark:text-white/60">{transaction.r_date}</span>
+                        <span className="text-[8px] font-bold text-black/20 dark:text-white/20">{transaction.r_time}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-y border-black/5 dark:border-white/5">
+                      <span className="text-[9px] font-black text-brand italic uppercase tracking-wider">
+                        {transaction.r_selection || transaction.r_match_name.split('vs')[1] || "—"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 rounded-r-xl border-y border-r border-black/5 dark:border-white/5 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className={`text-[8px] font-black uppercase tracking-widest mb-0.5 ${
+                          transaction.r_match_status === "loss" ? "text-red-500" : "text-green-500"
+                        }`}>
+                          {transaction.r_match_status}
+                        </span>
+                        <span className={`text-sm font-black ${
+                          transaction.r_match_status === "loss" ? "text-red-500" : "text-green-500"
+                        }`} style={{ fontFamily: FONTS.head }}>
+                          {transaction.r_match_status === "loss" ? "-" : "+"}₹{transaction.r_match_profit}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
-          /* No Data */
-          <div className="flex flex-col items-center justify-center py-24">
-            <div className="w-48 h-48 mb-6 bg-gray-200 rounded-full flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-24 w-24 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
+          <div className="py-24 text-center space-y-4">
+            <div className="w-20 h-20 bg-white/[0.02] rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-black/5 dark:border-white/5 opacity-20">
+              <FaSearch className="text-3xl" />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-800">No Transactions Found</h3>
-            <p className="text-gray-600 text-center text-lg max-w-md">
-              No betting transactions found for the selected date range. Try adjusting your filters or search criteria.
-            </p>
+            <p className="text-[10px] font-black uppercase text-black/20 dark:text-white/20 tracking-[0.5em]">No betting records found</p>
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <div className="p-4 md:p-5 bg-brand/5 border-t border-black/5 dark:border-white/5 flex items-center gap-3 relative z-10">
+        <FaHistory className="text-brand text-sm flex-shrink-0" />
+        <p className="text-[8px] text-black/40 dark:text-white/40 uppercase font-black tracking-widest leading-relaxed">
+          Table data is synchronized real-time. Contact support if any discrepancy is found.
+        </p>
+      </div>
+
+      <div className="pb-8 text-center opacity-5 select-none pointer-events-none">
+        <p className="text-[9px] font-black uppercase tracking-[2em] ml-[2em]">P&L Table Node</p>
+      </div>
+
+      <RoundDetailsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        transaction={selectedTx} 
+      />
     </div>
   );
 };

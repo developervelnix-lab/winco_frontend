@@ -1,16 +1,16 @@
 import React from 'react'
 import Navbar from '../navbar/Navbar'
 import Promotion from '../sidebar-components/Miscellaneous/Promotion'
-
+import { useColors } from '../../hooks/useColors';
 function PromotionPage() {
+  const COLORS = useColors();
   return (
-    <>
-      <Navbar/>
-      <div className='mt-[120px] mx-10'>
-         <Promotion/>
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
+      <Navbar />
+      <div className='pb-10 px-2'>
+        <Promotion />
       </div>
-    
-    </>
+    </div>
   )
 }
 

@@ -75,9 +75,9 @@ function Home1() {
 
 function ToastMessage({ onClose }) {
   return (
-    <div className="fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-red-600 text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
+    <div className="fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-red-600 text-black dark:text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
       <span className="flex-1 text-center">You are not logged in. Please log in to continue.</span>
-      <button onClick={onClose} className="ml-4 text-white font-bold">&times;</button>
+      <button onClick={onClose} className="ml-4 text-black dark:text-white font-bold">&times;</button>
     </div>
   );
 }

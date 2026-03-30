@@ -6,7 +6,7 @@ function OpenBetPage() {
   return (
      <>
         <Navbar/>
-        <div className='pt-[112px]'>
+        <div className=''>
             <OpenBets/>
         </div>
      </>

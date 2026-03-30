@@ -1,13 +1,21 @@
 import React, { useState } from "react";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation } from 'swiper/modules';
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useColors } from '../../hooks/useColors';
+import { FONTS } from '../../constants/theme';
 
-// Import all provider images (converted to lowercase)
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+
+// Import all provider images
 import bf from './providers/bf.png';
 import bggaming from './providers/bggaming.png';
 import bigtiminggaming from './providers/bigtiminggaming.png';
-import caleta from './providers/Caleta.png'
+import caleta from './providers/Caleta.png';
 import boominggames from './providers/boominggames.png';
-import booongo from './providers/Booongo.png'
+import booongo from './providers/Booongo.png';
 import cq9 from './providers/CQ9.png';
 import endorphina from './providers/endorphina.png';
 import evolution from './providers/Evolution.png';
@@ -26,125 +34,143 @@ import v8 from './providers/V8.png';
 import yesgaming from './providers/yesgaming.png';
 import rubyplay from './providers/RubyPlay.png';
 
-const gameproviders = [
-  { "logo": bf },
-  { "logo": bggaming },
-  { "logo": bigtiminggaming },
-  { "logo": boominggames },
-  { "logo": booongo },
-  { "logo": caleta },
-  { "logo": cq9 },
-  { "logo": endorphina },
-  { "logo": evolution },
-  { "logo": evoplay },
-  { "logo": gameart },
-  { "logo": pgsoft },
-  { "logo": playngo },
-  { "logo": playson },
-  { "logo": playtech },
-  { "logo": pragmaticplay },
-  { "logo": relaxgaming },
-  { "logo": redtiger },
-  { "logo": saba },
-  { "logo": skywind },
-  { "logo": v8 },
-  { "logo": yesgaming },
-  { "logo": rubyplay }
-
-
-]
+const providersData = [
+  { logo: bf, name: "BF Games" },
+  { logo: bggaming, name: "BG Gaming" },
+  { logo: bigtiminggaming, name: "BTG" },
+  { logo: boominggames, name: "Booming" },
+  { logo: booongo, name: "Booongo" },
+  { logo: caleta, name: "Caleta" },
+  { logo: cq9, name: "CQ9" },
+  { logo: endorphina, name: "Endorphina" },
+  { logo: evolution, name: "Evolution" },
+  { logo: evoplay, name: "Evoplay" },
+  { logo: gameart, name: "GameArt" },
+  { logo: pgsoft, name: "PG Soft" },
+  { logo: playngo, name: "Play'n GO" },
+  { logo: playson, name: "Playson" },
+  { logo: playtech, name: "Playtech" },
+  { logo: pragmaticplay, name: "Pragmatic" },
+  { logo: relaxgaming, name: "Relax" },
+  { logo: redtiger, name: "Red Tiger" },
+  { logo: saba, name: "Saba" },
+  { logo: skywind, name: "Skywind" },
+  { logo: v8, name: "V8" },
+  { logo: yesgaming, name: "Yes Gaming" },
+  { logo: rubyplay, name: "Ruby Play" }
+];
 
 const GameProvider = () => {
-  // Check if gameproviders is properly imported
-
-
-  // If gameproviders is undefined or empty, provide a fallback
-  const gameProviders = gameproviders || [];
-
+  const COLORS = useColors();
   const [showAll, setShowAll] = useState(false);
-  const [startIndex, setStartIndex] = useState(0);
-  const itemsPerPage = 6;
-
-  // Add this check to prevent errors if gameProviders is empty
-  const visibleProviders = gameProviders.length ? (
-    showAll
-      ? gameProviders
-      : gameProviders.slice(startIndex, startIndex + itemsPerPage)
-  ) : [];
-
-  const scrollLeft = () => {
-    if (startIndex > 0) setStartIndex(startIndex - itemsPerPage);
-  };
-
-  const scrollRight = () => {
-    if (startIndex + itemsPerPage < gameProviders.length) setStartIndex(startIndex + itemsPerPage);
-  };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-      {/* Header with Title & Navigation */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-[#FFFFFF] text-md font-serif">🎰 Games Providers</h2>
-        <div className="flex items-center space-x-3">
-          {!showAll && (
-            <>
-              <button
-                onClick={scrollLeft}
-                disabled={startIndex === 0}
-                className={`p-2 rounded-full ${startIndex === 0 ? "opacity-50 cursor-not-allowed" : "bg-gray-300 hover:bg-gray-400"
-                  }`}
+    <section className="relative py-2 md:py-4 overflow-hidden" style={{ backgroundColor: COLORS.bg }}>
+      {/* Cinematic Background Atmosphere */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl h-64 bg-brand/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Elite Header */}
+        <div className="flex flex-col md:flex-row justify-between md:items-end gap-5 md:gap-0 mb-8 md:mb-10 pb-6 border-b border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div 
+              className="h-5 md:h-6 w-1.5 rounded-full"
+              style={{ background: COLORS.brandGradient }}
+            ></div>
+            <div>
+              <h2 
+                className="text-base sm:text-lg md:text-xl font-black text-black dark:text-white tracking-[0.1em] md:tracking-[0.2em] uppercase leading-none"
+                style={{ fontFamily: FONTS.head }}
               >
-                <FaChevronLeft size={18} />
-              </button>
-              <button
-                onClick={scrollRight}
-                disabled={startIndex + itemsPerPage >= gameProviders.length}
-                className={`p-2 rounded-full ${startIndex + itemsPerPage >= gameProviders.length
-                  ? "opacity-50 cursor-not-allowed"
-                  : "bg-gray-300 hover:bg-gray-400"
-                  }`}
-              >
-                <FaChevronRight size={18} />
-              </button>
-            </>
-          )}
+                Game <span style={{ color: COLORS.brand }}>Providers</span>
+              </h2>
+              <p className="text-[8px] sm:text-[9px] md:text-[10px] text-black/30 dark:text-white/30 font-bold uppercase tracking-[0.2em] md:tracking-[0.4em] mt-2 md:mt-3">Worldwide Partnerships</p>
+            </div>
+          </div>
+
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-sm text-red-500 font-medium hover:underline"
+            className="w-full md:w-auto px-4 md:px-6 py-3 md:py-2 rounded-xl border border-black/10 dark:border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-black/60 dark:text-white/60 hover:text-black dark:text-white hover:border-brand/40 transition-all duration-300 backdrop-blur-md text-center"
           >
-            {showAll ? "See Less" : "See All"}
+            {showAll ? "Switch to Carousel" : "View All Partners"}
           </button>
         </div>
-      </div>
 
-      {/* Grid of Providers */}
-      <div className={`grid gap-3 transition-all duration-300 ${showAll ? "grid-cols-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-8" : "grid-cols-3 sm:grid-cols-4"}`}>
-        {visibleProviders.length > 0 ? (
-          visibleProviders.map((provider, index) => (
-            <Card key={index} logo={provider.logo} />
-          ))
+        {/* Dynamic Display Area */}
+        {showAll ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {providersData.map((provider, index) => (
+              <ProviderCard key={index} logo={provider.logo} name={provider.name} />
+            ))}
+          </div>
         ) : (
-          <div className="col-span-full text-center text-white py-10">
-            No game providers available
+          <div className="relative">
+            <Swiper
+              modules={[Autoplay, Navigation]}
+              spaceBetween={8}
+              slidesPerView={3}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              navigation={{
+                prevEl: '.provider-prev',
+                nextEl: '.provider-next',
+              }}
+              breakpoints={{
+                640: { slidesPerView: 3 },
+                1024: { slidesPerView: 6 },
+                1280: { slidesPerView: 8 },
+              }}
+              className="w-full"
+            >
+              {providersData.map((provider, index) => (
+                <SwiperSlide key={index}>
+                  <ProviderCard logo={provider.logo} name={provider.name} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            {/* Custom Navigation Controls - Re-positioned inside to avoid cutting */}
+            <button className="provider-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/10 dark:bg-black/60 border border-black/10 dark:border-white/10 flex items-center justify-center text-black/40 dark:text-white/40 hover:text-brand hover:border-brand/50 transition-all opacity-0 group-hover/swiper:opacity-100 backdrop-blur-md">
+              <FaChevronLeft size={12} />
+            </button>
+            <button className="provider-next absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/10 dark:bg-black/60 border border-black/10 dark:border-white/10 flex items-center justify-center text-black/40 dark:text-white/40 hover:text-brand hover:border-brand/50 transition-all opacity-0 group-hover/swiper:opacity-100 backdrop-blur-md">
+              <FaChevronRight size={12} />
+            </button>
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
-const Card = ({ logo }) => {
+const ProviderCard = ({ logo, name }) => {
   return (
-    <div className="w-full h-[100px] bg-white rounded-lg shadow-md flex items-center justify-center p-3 hover:shadow-xl hover:scale-105 transition-all">
-      <img
-        src={logo}
-        alt="Provider Logo"
-        className="max-w-full max-h-full object-contain"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = "https://via.placeholder.com/150?text=Logo";
-        }}
-      />
+    <div className="group relative w-full aspect-[3/2] rounded-2xl p-[1px] bg-gradient-to-br from-white/20 to-transparent transition-all duration-500 hover:from-brand/50 shadow-xl">
+      <div className="w-full h-full rounded-[15px] bg-white dark:bg-[#121212] flex flex-col items-center justify-center p-4 overflow-hidden relative border border-black/5 dark:border-white/5">
+        {/* Stronger Pure White Backing for Black Logos */}
+        <div className="absolute inset-0 bg-white opacity-[0.03] group-hover:opacity-[0.05] transition-opacity duration-500"></div>
+        <div 
+          className="absolute w-3/4 h-3/4 rounded-full blur-2xl opacity-60 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, white 0%, transparent 70%)' }}
+        ></div>
+        
+        <img
+          src={logo}
+          alt={name}
+          className="relative z-10 max-w-[85%] max-h-[70%] object-contain transition-all duration-500 scale-100 group-hover:scale-110"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://via.placeholder.com/150?text=Logo";
+          }}
+        />
+        
+        {/* Subtle Brand Tag */}
+        <span className="absolute bottom-2 sm:bottom-3 text-[5px] sm:text-[7px] font-black uppercase tracking-[0.1em] sm:tracking-[0.3em] text-black/20 dark:text-white/20 group-hover:text-brand transition-all duration-300 whitespace-nowrap">
+          Official Partner
+        </span>
+      </div>
     </div>
   );
 };

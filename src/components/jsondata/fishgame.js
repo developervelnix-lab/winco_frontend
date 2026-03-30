@@ -1,74 +1,74 @@
 export const fishgames = [
-    {
-        "Game Name": "Ocean King Jackpot",
-        "Game UID": "2cccbb53dc31457d0fda2b1af7b87f90",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Ocean-King-Jackpot.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Dinosaur Tycoon II",
-        "Game UID": "d96a6188227cfe71995feadc70f03c06",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dinosaur-Tycoon-II.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Happy Fishing",
-        "Game UID": "11055f0bc7f35b34bcfa966b529dba63",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Happy-Fishing.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Mega Fishing",
-        "Game UID": "5b4c3acdabc8ac8f234d6864d2ee3a8a",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Mega-Fishing.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "All-star Fishing",
-        "Game UID": "bb0c86c376c785e0133af2fe88faaadd",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/All-star-Fishing.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Boom Legend",
-        "Game UID": "fc537dbfab0fcfa7ade4bcb9210e78e0",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Boom-Legend.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Dragon Fortune",
-        "Game UID": "5c35435c71eb4674e79b1cd8068ba430",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dragon-Fortune.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Dinosaur Tycoon",
-        "Game UID": "dff81bd0bba33f59adf64ca1ba80b63b",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dinosaur-Tycoon.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Jackpot Fishing",
-        "Game UID": "599dc6e567e3cf3bc75c19318812bdbb",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Jackpot-Fishing.png",
-        "Game Provider": "TADAgaming"
-      },
-      {
-        "Game Name": "Bombing Fishing",
-        "Game UID": "386cd7d395614ff0e15e6c832211ecd1",
-        "Game Type": "Fish Game",
-        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Bombing-Fishing.png",
-        "Game Provider": "TADAgaming"
-      },
+    // {
+    //     "Game Name": "Ocean King Jackpot",
+    //     "Game UID": "2cccbb53dc31457d0fda2b1af7b87f90",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Ocean-King-Jackpot.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Dinosaur Tycoon II",
+    //     "Game UID": "d96a6188227cfe71995feadc70f03c06",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dinosaur-Tycoon-II.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Happy Fishing",
+    //     "Game UID": "11055f0bc7f35b34bcfa966b529dba63",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Happy-Fishing.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Mega Fishing",
+    //     "Game UID": "5b4c3acdabc8ac8f234d6864d2ee3a8a",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Mega-Fishing.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "All-star Fishing",
+    //     "Game UID": "bb0c86c376c785e0133af2fe88faaadd",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/All-star-Fishing.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Boom Legend",
+    //     "Game UID": "fc537dbfab0fcfa7ade4bcb9210e78e0",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Boom-Legend.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Dragon Fortune",
+    //     "Game UID": "5c35435c71eb4674e79b1cd8068ba430",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dragon-Fortune.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Dinosaur Tycoon",
+    //     "Game UID": "dff81bd0bba33f59adf64ca1ba80b63b",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Dinosaur-Tycoon.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Jackpot Fishing",
+    //     "Game UID": "599dc6e567e3cf3bc75c19318812bdbb",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Jackpot-Fishing.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
+    //   {
+    //     "Game Name": "Bombing Fishing",
+    //     "Game UID": "386cd7d395614ff0e15e6c832211ecd1",
+    //     "Game Type": "Fish Game",
+    //     "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/tada/Bombing-Fishing.png",
+    //     "Game Provider": "TADAgaming"
+    //   },
     {
         "Game Name": "Royal Fishing",
         "Game UID": "e794bf5717aca371152df192341fe68b",

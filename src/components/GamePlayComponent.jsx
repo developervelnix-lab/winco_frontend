@@ -81,7 +81,7 @@ const GameplayComponent = () => {
     <div className="fixed inset-0 flex flex-col bg-gray-900">
       {/* Header - animated to slide up/down */}
       <div
-        className={`bg-gray-800 text-white p-3 flex justify-between items-center z-20 transition-transform duration-300 ease-in-out ${
+        className={`bg-gray-800 text-black dark:text-white p-3 flex justify-between items-center z-20 transition-transform duration-300 ease-in-out ${
           isHeaderVisible ? "transform translate-y-0" : "transform -translate-y-full"
         }`}
       >
@@ -107,7 +107,7 @@ const GameplayComponent = () => {
 
           <button
             onClick={handleDeposit}
-            className="flex items-center gap-2 bg-gradient-to-r from-lime-500 to-green-600 hover:from-lime-600 hover:to-green-700 text-white rounded-full font-medium py-2 px-5 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black dark:text-white rounded-full font-medium py-2 px-5 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <FaWallet size={16} />
             <span>Deposit</span>
@@ -119,7 +119,7 @@ const GameplayComponent = () => {
       <div className="flex-1 w-full relative">
         {/* Show a hint to move mouse when header is hidden */}
         {mouseIdle && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white text-sm py-1 px-3 rounded-full z-10 animate-pulse">
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-black dark:text-white text-sm py-1 px-3 rounded-full z-10 animate-pulse">
             Move mouse to show controls
           </div>
         )}

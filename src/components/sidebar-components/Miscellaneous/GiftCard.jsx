@@ -1,54 +1,35 @@
-import React, { useState } from 'react';
-import { FaGift, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
-import { Toast } from 'flowbite-react';
+import React, { useState, useEffect } from 'react';
+import { FaGift, FaCheckCircle, FaExclamationTriangle, FaClock } from 'react-icons/fa';
 import { API_URL } from '@/utils/constants';
+import { useColors } from '../../../hooks/useColors';
+import { FONTS } from '../../../constants/theme';
 
 const GiftCardRedemption = () => {
+  const COLORS = useColors();
   const [redeemCode, setRedeemCode] = useState('');
-  const [toasts, setToasts] = useState([]);
+  const [toast, setToast] = useState(null);
   const authSecretKey = sessionStorage.getItem('auth_secret_key');
   const accountId = sessionStorage.getItem('account_id');
 
-  const addToast = (message, type = 'info') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000);
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
   };
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchClaimGiftCard = async () => {
     if (!authSecretKey) {
-      addToast('Authentication required!', 'error');
+      showToast('Authentication required!', 'error');
       return;
     }
 
     try {
-      const response = await fetch(API_URL
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        , {
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,93 +43,96 @@ const GiftCardRedemption = () => {
       });
 
       const result = await response.json();
-      console.log("Gift Card Claim Response:", result);
-
-      if (result.status_code) {
-        if(result.status_code === 200) {
-          addToast("Successfully claimed gift card! Your reward has been added to your account.", 'success');
-        } else {
-          addToast(`Claim rejected: ${result.message || 'Invalid gift card code'}`, 'error');
-        }
+      
+      if (result.status_code === "success") {
+        showToast("Successfully claimed gift card!", 'success');
+        setRedeemCode('');
       } else {
-        addToast('Failed to claim gift card!', 'error');
+        showToast(result.message || 'Invalid gift card code', 'error');
       }
     } catch (error) {
-      console.error("Error claiming gift card", error);
-      addToast('Error processing request. Please try again later.', 'error');
+      showToast('Error processing request. Please try again.', 'error');
     }
   }
 
   const handleSubmitCode = () => {
     if (!redeemCode) {
-      addToast('Please enter a redeem code', 'error');
+      showToast('Please enter a redeem code', 'error');
       return;
     }
-
     fetchClaimGiftCard();
-    setRedeemCode('');
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-50 flex flex-col items-center justify-center p-4 relative">
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-4">
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            onDismiss={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-            color={
-              toast.type === 'error' ? 'failure' :
-              toast.type === 'success' ? 'success' : 'info'
-            }
-          >
-            <div className="flex items-center">
-              {toast.type === 'success' && (
-                <FaCheckCircle className="text-green-500 mr-2" size={20} />
-              )}
-              {toast.type === 'error' && (
-                <FaExclamationTriangle className="text-red-500 mr-2" size={20} />
-              )}
-              <div className="ml-1 text-sm font-normal">
-                {toast.message}
-              </div>
-            </div>
-          </Toast>
-        ))}
+    <div className="w-[96%] max-w-lg mx-auto overflow-hidden rounded-3xl border border-black/10 dark:border-white/10 shadow-2xl relative mb-6"
+      style={{ backgroundColor: COLORS.bg2 }}>
+
+      {/* Background Glows */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-brand/30 blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand/30 blur-[100px]"></div>
       </div>
+
+      {/* Custom Toast */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-fadeIn">
+          <div className={`flex items-center p-4 rounded-xl border shadow-2xl backdrop-blur-xl ${
+            toast.type === 'success' ? 'bg-black/10 dark:bg-black/90 border-green-500/30 text-black dark:text-white' : 'bg-black/10 dark:bg-black/90 border-red-500/30 text-black dark:text-white'
+          }`}>
+            {toast.type === 'success' ? <FaCheckCircle className="text-green-500 mr-3 text-xl" /> : <FaExclamationTriangle className="text-red-500 mr-3 text-xl" />}
+            <span className="text-xs font-black uppercase tracking-wide">{toast.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
-      <div className="flex items-center mb-2 text-gray-800">
-        <FaGift size={32} className="mr-3" />
-        <h1 className="text-3xl font-bold">Redeem Your Gift Card</h1>
-      </div>
-
-      {/* Card Display */}
-      <div className="w-full max-w-md bg-white rounded-t-xl shadow-lg p-4 mb-0 flex flex-col items-center">
-        <div className="relative w-48 h-28 flex items-center justify-center">
-          <FaGift size={60} className="text-yellow-500" />
+      <div className="p-5 md:p-7 border-b border-black/5 dark:border-white/5 text-center relative z-10 bg-white/[0.02]">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg text-black dark:text-white text-xl mx-auto mb-4"
+          style={{ background: COLORS.brandGradient }}>
+          <FaGift />
         </div>
-        <h2 className="text-xl font-sans text-gray-700 mt-2">Unlock your rewards!</h2>
-        <p className="text-gray-500 text-center mt-1">Enter your gift card code to claim exclusive benefits.</p>
+        <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-black dark:text-white" style={{ fontFamily: FONTS.head }}>
+          Gift Card <span style={{ color: COLORS.brand }}>Redemption</span>
+        </h2>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-black/30 dark:text-white/30 mt-2">Enter your code below to claim rewards</p>
       </div>
 
-      {/* Redemption Form */}
-      <div className="w-full max-w-md bg-white rounded-b-xl shadow-lg p-8">
-        <label className="block text-gray-700 font-semibold mb-2">Enter Redeem Code</label>
-        <input
-          type="text"
-          value={redeemCode}
-          onChange={(e) => setRedeemCode(e.target.value)}
-          placeholder="Enter your redeem code"
-          className="w-full p-4 border rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
-        />
+      {/* Form Content */}
+      <div className="p-5 md:p-6 space-y-5 relative z-10">
+        <div className="space-y-2">
+          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-black/40 dark:text-white/40 ml-1" style={{ fontFamily: FONTS.ui }}>
+            Redeem Code
+          </label>
+          <input
+            type="text"
+            value={redeemCode}
+            onChange={(e) => setRedeemCode(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-[13px] font-black tracking-widest uppercase transition-all duration-300 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand shadow-inner placeholder-black/30 dark:placeholder-white/30 text-black dark:text-white"
+            placeholder="XXXX-XXXX-XXXX"
+            style={{ 
+              fontFamily: FONTS.ui 
+            }}
+          />
+        </div>
 
         <button 
-          className="w-full p-4 bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600 transition duration-300"
           onClick={handleSubmitCode}
+          className="w-full py-3 rounded-lg font-black uppercase tracking-widest text-[11px] text-black dark:text-white shadow-lg active:scale-95 transition-all duration-300 relative overflow-hidden group"
+          style={{ background: COLORS.brandGradient, fontFamily: FONTS.ui }}
         >
-          Claim Now
+          <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <span className="relative">Claim Rewards Now</span>
         </button>
+
+        <div className="flex items-center justify-center gap-2 pt-4 opacity-30 select-none">
+          <FaClock className="text-xs" />
+          <span className="text-[9px] font-black uppercase tracking-widest">Rewards added instantly</span>
+        </div>
+      </div>
+
+      {/* Footer Decoration */}
+      <div className="pb-8 text-center opacity-5 select-none pointer-events-none">
+        <p className="text-[9px] font-black uppercase tracking-[2em] ml-[2em]">Rewards System</p>
       </div>
     </div>
   );

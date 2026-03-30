@@ -1,15 +1,16 @@
 import Navbar from "../navbar/Navbar";
 import TransactionPage from "../sidebar-components/statements/TransactionPage";
-import { FaWallet } from "react-icons/fa"; // Importing an icon from react-icons
+import { useColors } from '../../hooks/useColors';
 
 function Transaction() {
+  const COLORS = useColors();
   return (
-    <>
+    <div className="min-h-screen" style={{ backgroundColor: COLORS.bg }}>
       <Navbar />
-      <div className="pt-[115px]">
+      <div className="pb-10 px-2">
         <TransactionPage />
       </div>
-    </>
+    </div>
   );
 }
 

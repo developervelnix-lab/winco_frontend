@@ -12,12 +12,18 @@ import Live from "./Live"
 import Turbogames from "./Turbogames"
 import FeaturesSection from "./FeaturesSection"
 import PromotionSection from "./PromotionSection"
+import NewsTicker from "./NewsTicker"
 import Footer from "./Footer"
+import { useColors } from '../../hooks/useColors'
+import { useSite } from "../../context/SiteContext"
+import { URL as BASE_URL } from "../../utils/constants"
 
 function Home() {
-  const [loading, setLoading] = useState(true)
+  const COLORS = useColors()
+  const { accountInfo, promoBanners, heroBanners, loading } = useSite()
   const [showToast, setShowToast] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
+
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const checkAuth = () => {
@@ -31,7 +37,7 @@ function Home() {
       setShowSuccessToast(true)
       setShowToast(false)
       setTimeout(() => setShowSuccessToast(false), 5000)
-    } else if (!isNowAuthenticated) {
+    } else if (!isNowAuthenticated && wasAuthenticated) {
       setShowToast(true)
       setTimeout(() => setShowToast(false), 3000)
     } else {
@@ -41,8 +47,7 @@ function Home() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(false)
-
+      
       const justLoggedIn = sessionStorage.getItem("just_logged_in") === "true"
       const authSecretKey = sessionStorage.getItem("auth_secret_key")
       const isLoggedIn = !!authSecretKey
@@ -55,9 +60,6 @@ function Home() {
           sessionStorage.removeItem("just_logged_in")
           setTimeout(() => setShowSuccessToast(false), 5000)
         }
-      } else {
-        setShowToast(true)
-        setTimeout(() => setShowToast(false), 3000)
       }
     }, 10)
 
@@ -75,50 +77,57 @@ function Home() {
     return () => window.removeEventListener("storage", handleStorageChange)
   }, [isAuthenticated])
 
-  const handleContainerClick = (e) => {
-    const isToast = e.target.closest(".toast-message")
-    if (isToast) return
-    checkAuth()
-  }
-
-  
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.substring(1)
+      const element = document.getElementById(id)
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" })
+        }, 500)
+      }
+    }
+  }, [])
 
   return (
-    <div className="flex flex-col min-h-screen relative" onClick={handleContainerClick}>
+    <div className="flex flex-col min-h-screen relative">
       {showToast && !isAuthenticated && <ToastMessage onClose={() => setShowToast(false)} />}
       {showSuccessToast && <SuccessToastMessage onClose={() => setShowSuccessToast(false)} />}
 
-      <Navbar />
-      <main className="flex-grow pt-[116px] px-4 md:px-8">
-        <div className="mb-3">
-          <FrontScrollableCard />
+      <Navbar externalAccountInfo={accountInfo} />
+      <main className="flex-grow" style={{ backgroundColor: COLORS.bg }}>
+        <div className="w-full relative">
+          <FrontScrollableCard banners={heroBanners} />
         </div>
-        <div className="mb-3">
-          <TrendingSlot />
-        </div>
-        <div className="mb-3">
-          <Live />
-        </div>
-        <div className="mb-2 ">
-          <Turbogames />
-        </div>
-        <div className="mb-3">
-          <GamesDisplay />
-        </div>
-        <div className="mb-3">
-          <PromotionSection />
-        </div>
-        <div className="mb-6">
-          <GameProvider />
+        <NewsTicker />
+        <div className="px-4 md:px-8 mt-2 md:mt-4">
+          <div className="mb-3 md:mb-4" id="slots-trending">
+            <TrendingSlot />
+          </div>
+          <div className="mb-3 md:mb-4" id="live">
+            <Live />
+          </div>
+          <div className="mb-3 md:mb-4" id="aviator">
+            <Turbogames />
+          </div>
+          <div className="mb-3 md:mb-4">
+            <GamesDisplay />
+          </div>
+          <div className="mb-3 md:mb-4" id="promotions">
+            <PromotionSection banners={promoBanners} />
+          </div>
+          <div className="mb-4 md:mb-6">
+            <GameProvider />
+          </div>
         </div>
       </main>
-      <div className="px-4 md:px-8 mb-5">
+      <div className="px-4 md:px-8 mb-4 md:mb-6">
         <FeaturesSection />
       </div>
-      <div className="px-4 md:px-8 mb-6">
+      <div className="px-4 md:px-8 mb-4 md:mb-6">
         <Faq />
       </div>
-      <Footer />
+      <Footer accountInfo={accountInfo} />
       <footer className="md:hidden fixed bottom-0 left-0 right-0 z-50">
         <MobileFooterNav />
       </footer>
@@ -127,14 +136,28 @@ function Home() {
 }
 
 function LogoLoader() {
+  const COLORS = useColors()
+  const { accountInfo } = useSite()
+  const logoUrl = accountInfo?.service_site_logo
+    ? `${BASE_URL}${encodeURI(accountInfo.service_site_logo)}`
+    : "";
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-orange-500 z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: COLORS.bg }}>
       <div className="flex flex-col items-center">
-        <div className="text-center">
-          <div className="text-4xl md:text-6xl font-extrabold text-black mb-4 animate-pulse tracking-wider">
-          Kolor Bet
+        <div className="relative mb-6">
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            {logoUrl && <img src={logoUrl} alt="Loading" className="w-8 h-8 object-contain" />}
+            <div className="absolute inset-0 border-[3px] rounded-full animate-spin" style={{ borderColor: `${COLORS.brand}33`, borderTopColor: COLORS.brand }}></div>
           </div>
-          <div className="text-md md:text-base font-semibold text-black ">PREMIER BETTING EXPERIENCE</div>
+        </div>
+        <div className="text-center space-y-1">
+          <div className="text-2xl md:text-3xl font-black text-black dark:text-white uppercase tracking-[0.1em] hero-text-main">
+            {accountInfo?.service_site_name || "Site"}
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: `${COLORS.brand}99` }}>
+            PREMIER BETTING EXPERIENCE
+          </div>
         </div>
       </div>
     </div>
@@ -143,9 +166,9 @@ function LogoLoader() {
 
 function ToastMessage({ onClose }) {
   return (
-    <div className="toast-message fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-red-600 text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
+    <div className="toast-message fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-red-600 text-black dark:text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
       <span className="flex-1 text-center">Please login to play. Minimum deposit ₹100 required.</span>
-      <button onClick={onClose} className="ml-4 text-white font-bold">
+      <button onClick={onClose} className="ml-4 text-black dark:text-white font-bold">
         &times;
       </button>
     </div>
@@ -153,15 +176,19 @@ function ToastMessage({ onClose }) {
 }
 
 function SuccessToastMessage({ onClose }) {
+  const COLORS = useColors()
   return (
-    <div className="toast-message fixed top-8 left-1/2 transform -translate-x-1/2 p-4 bg-lime-600 text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]">
-      <span className="flex-1 text-center">Successfully logged in. Welcome to Kolor Bet!</span>
-      <button onClick={onClose} className="ml-4 text-white font-bold">
+    <div
+      className="toast-message fixed top-8 left-1/2 transform -translate-x-1/2 p-4 text-black dark:text-white flex justify-between items-center animate-slide-in rounded-lg shadow-lg w-[90%] md:w-[400px] z-[1000]"
+      style={{ backgroundColor: `${COLORS.brand}CC` }}
+    >
+      <span className="flex-1 text-center">Successfully logged in. Welcome!</span>
+      <button onClick={onClose} className="ml-4 text-black dark:text-white font-bold">
         &times;
       </button>
     </div>
   )
 }
 
-export default Home
 
+export default Home

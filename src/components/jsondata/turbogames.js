@@ -101,6 +101,12 @@ export const turbogames = [
         "icon": "https://ossimg.tirangaagent.com/Tiranga/gamelogo/JILI/236.png"
       },
       {
+        "Game Name": "Trump Card",
+        "Game UID": "96c010fc4a95792401e903213d7add44",
+        "Game Type": "CasinoLive",
+        "icon": "https://huidu-bucket.s3.ap-southeast-1.amazonaws.com/api/jdb/Trump-Card.png"
+      },
+      {
         "Game Name": "Wheel",
         "Game UID": "6e19e03c50f035ddd9ffd804c30f8c80",
         "Game Type": "CasinoLive",
