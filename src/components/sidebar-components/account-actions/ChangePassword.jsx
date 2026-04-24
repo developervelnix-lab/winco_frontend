@@ -7,8 +7,8 @@ import { FONTS } from '../../../constants/theme';
 
 const PasswordChangeForm = () => {
   const COLORS = useColors();
-  const authSecretKey = sessionStorage.getItem('auth_secret_key');
-  const userId = sessionStorage.getItem('account_id');
+  const authSecretKey = localStorage.getItem('auth_secret_key');
+  const userId = localStorage.getItem('account_id');
 
   const [formData, setFormData] = useState({
     oldPassword: "",

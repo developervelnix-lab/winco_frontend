@@ -22,14 +22,15 @@ function FrontScrollableCard({ banners = [] }) {
           <div key={index} className="relative w-full h-full overflow-hidden group">
             <img
               className="w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
-              src={`${BASE_URL}${encodeURI(slide.image_path)}`}
+              src={slide.image_path?.startsWith('http') ? slide.image_path : `${BASE_URL}${encodeURI(slide.image_path)}`}
               alt={`Banner ${index + 1}`}
             />
           </div>
         ))}
       </Carousel>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* Flowbite Carousel Customization */
         .h-full > div {
           background-color: transparent !important;

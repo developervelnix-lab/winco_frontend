@@ -20,17 +20,24 @@ import WithdrawPage from './components/pages/WithdrawPage';
 import GifrCardPage from './components/pages/GifrCardPage';
 import PromotionPage from './components/pages/PromotionPage';
 import InviteAndEarnPage from './components/pages/InviteAndEarnPage';
-import ContactPage from './components/pages/ContactPage';
+import SupportPage from './components/pages/SupportPage';
+import BonusDetailsPage from './components/pages/BonusDetailsPage';
+import ActiveBonusPage from './components/pages/ActiveBonusPage';
+import BonusPage from './components/pages/BonusPage';
+import NotificationsPage from './components/pages/NotificationsPage';
+import NotFound from './components/pages/NotFound';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ThemeSynchronizer from './constants/ThemeSynchronizer';
 import { useEffect } from 'react';
 import { useSite, SiteProvider } from './context/SiteContext';
 import { URL as BASE_URL } from './utils/constants';
+import BroadcastModal from './components/common/BroadcastModal';
 
 const RootLayout = () => {
   return (
     <>
       <ScrollRestoration />
+      <BroadcastModal />
       <Outlet />
     </>
   );
@@ -52,6 +59,10 @@ const appRouter = createBrowserRouter([
             <WithdrawPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "/bonus-details/:id",
+        element: <BonusDetailsPage />,
       },
       {
         path: "/deposit",
@@ -135,9 +146,17 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "/promotion",
+        element: <PromotionPage />,
+      },
+      {
+        path: "/bonus",
+        element: <BonusPage />,
+      },
+      {
+        path: "/active-bonus",
         element: (
           <ProtectedRoute>
-            <PromotionPage />
+            <ActiveBonusPage />
           </ProtectedRoute>
         ),
       },
@@ -150,8 +169,20 @@ const appRouter = createBrowserRouter([
         ),
       },
       {
-        path: "/contact",
-        element: <ContactPage />,
+        path: "/support",
+        element: <SupportPage />,
+      },
+      {
+        path: "/notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ]
   }
@@ -159,16 +190,62 @@ const appRouter = createBrowserRouter([
 
 const BrandManager = () => {
   const { accountInfo } = useSite();
-  
+
   useEffect(() => {
     if (accountInfo) {
       if (accountInfo.service_site_name) {
         document.title = accountInfo.service_site_name;
       }
       if (accountInfo.service_site_logo) {
+        const logoPath = accountInfo.service_site_logo;
+        const logoUrl = logoPath.startsWith('http') || logoPath.startsWith('data:')
+          ? logoPath
+          : `${BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL}${logoPath.startsWith('/') ? logoPath : `/${logoPath}`}`;
+
+        console.log("PWA Branding - Logo URL:", logoUrl);
+
+        // Update Icons
         const favicon = document.querySelector('link[rel="icon"]');
-        if (favicon) {
-          favicon.href = `${BASE_URL}${encodeURI(accountInfo.service_site_logo)}`;
+        if (favicon) favicon.href = logoUrl;
+
+        const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+        if (appleIcon) appleIcon.href = logoUrl;
+
+        // Dynamically update Manifest to ensure the browser's install prompt uses the backend logo
+        const manifest = {
+          name: accountInfo.service_site_name || "Winco Official Platform",
+          short_name: (accountInfo.service_site_name || "Winco").split(' ')[0],
+          description: accountInfo.service_tagline?.replace(/<[^>]*>/g, '') || "Winco Gaming & Sports Betting Platform.",
+          start_url: window.location.origin + "/",
+          display: "standalone",
+          background_color: "#000000",
+          theme_color: "#E49C16",
+          icons: [
+            {
+              src: window.location.origin + "/logo192.png",
+              sizes: "192x192",
+              purpose: "any"
+            },
+            {
+              src: window.location.origin + "/logo512.png",
+              sizes: "512x512",
+              purpose: "any"
+            },
+            {
+              src: window.location.origin + "/logo512.png",
+              sizes: "512x512",
+              purpose: "maskable"
+            }
+          ]
+        };
+
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = window.URL.createObjectURL(blob);
+        console.log("PWA Branding - Manifest Blob URL:", manifestURL);
+
+        const manifestLink = document.querySelector('link[rel="manifest"]');
+        if (manifestLink) {
+          manifestLink.setAttribute('href', manifestURL);
         }
       }
     }

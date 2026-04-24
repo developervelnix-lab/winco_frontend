@@ -6,7 +6,7 @@ import { FONTS } from '../../../constants/theme';
 
 const InviteAndEarn = () => {
   const COLORS = useColors();
-  const referralCode = sessionStorage.getItem('account_id');
+  const referralCode = localStorage.getItem('account_id');
   const referralURL = `${URL}home?referralcode=${referralCode}`;
   const [showToast, setShowToast] = useState(false);
 

@@ -8,8 +8,8 @@ const GiftCardRedemption = () => {
   const COLORS = useColors();
   const [redeemCode, setRedeemCode] = useState('');
   const [toast, setToast] = useState(null);
-  const authSecretKey = sessionStorage.getItem('auth_secret_key');
-  const accountId = sessionStorage.getItem('account_id');
+  const authSecretKey = localStorage.getItem('auth_secret_key');
+  const accountId = localStorage.getItem('account_id');
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });

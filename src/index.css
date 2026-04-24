@@ -6,6 +6,7 @@
 
 :root {
   --brand-color: #FF2D2D;
+  --brand-rgb: 255, 45, 45;
   --brand-color-light: #FF2D2D;
   --brand-color-dark: #FF2D2D;
   --brand-gradient: linear-gradient(135deg, #FF2D2D 0%, #CC0000 100%);
@@ -24,6 +25,25 @@
   --font-display: 'Anton', sans-serif;
   --font-ui: 'Rajdhani', sans-serif;
   --font-head: 'Oswald', sans-serif;
+}
+
+@layer utilities {
+  .animate-modal-in {
+    animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .animate-modal-out {
+    animation: modalOut 0.2s cubic-bezier(0.4, 0, 1, 1);
+  }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes modalOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
 }
 
 html.light {
@@ -260,7 +280,22 @@ html.light .shadow-inner-xl {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(20%); }
+  100% { transform: translateX(-100%); }
+}
 
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.pause-marquee {
+  animation-play-state: paused !important;
+}
+
+.hover\:pause-marquee:hover {
+  animation-play-state: paused !important;
+}
 /* ══════════════════════════════
    TOP UTILITY BAR
 ══════════════════════════════ */
@@ -333,8 +368,7 @@ html.light .shadow-inner-xl {
    Updated for Full Responsiveness
 ══════════════════════════════ */
 .custom-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 200;
   background: rgba(13,13,13,0.97);
   backdrop-filter: blur(20px);
@@ -1239,5 +1273,47 @@ body.menu-open [class*="easysocial"] {
 
 /* Ensure Sidebar stays on top of Bottom Navigation */
 .menu-open header {
- z-index: 100;
+  z-index: 100;
 }
+
+/* ══════════════════════════════
+   EASYSOCIAL VISIBILITY CONTROL
+   Hides widget globally, shows only on Home via .show-whatsapp
+══════════════════════════════ */
+
+/* Hide WhatsApp widget globally by default */
+#es-widget-container, 
+.es-widget, 
+[id^="es-widget"], 
+[class*="easysocial"],
+.es-chat-iconButton {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Show WhatsApp icon ONLY when body has .show-whatsapp class */
+body.show-whatsapp #es-widget-container, 
+body.show-whatsapp .es-widget, 
+body.show-whatsapp [id^="es-widget"], 
+body.show-whatsapp [class*="easysocial"],
+body.show-whatsapp .es-chat-iconButton {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Hide WhatsApp widget when sidebar menu is open on mobile */
+body.menu-open #es-widget-container,
+body.menu-open .es-widget,
+body.menu-open [id^="es-widget"],
+body.menu-open [class*="easysocial"],
+body.menu-open .es-chat-iconButton {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+

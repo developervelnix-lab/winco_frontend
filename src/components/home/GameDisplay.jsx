@@ -16,9 +16,11 @@ import { indianpokergames } from "../jsondata/indianpokergame"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useColors } from '../../hooks/useColors'
 import { FONTS } from '../../constants/theme'
+import { useSite } from "../../context/SiteContext"
 
-const GameSection = ({ title, games }) => {
+const GameSection = ({ title, games, id }) => {
   const COLORS = useColors()
+  const { setShowLogin } = useSite()
   const [preloadedImages, setPreloadedImages] = useState([])
   const [loadingForGames, setLoadingForGames] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
@@ -30,7 +32,7 @@ const GameSection = ({ title, games }) => {
   const [loadingProgress, setLoadingProgress] = useState(0)
 
   const popupParam = searchParams.get("show_all")
-  const sectionId = title.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-")
+  const sectionId = id || title.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-")
 
   useEffect(() => {
     if (popupParam === sectionId) {
@@ -102,17 +104,21 @@ const GameSection = ({ title, games }) => {
   }
 
   const handleGameClick = (game) => {
+    const authSecretKey = localStorage.getItem("auth_secret_key")
+    if (!authSecretKey) {
+      setShowLogin(true)
+      return
+    }
     setConfirmPopup({ show: true, game, error: null })
   }
 
   const confirmGameOpen = async () => {
-    const authSecretKey = sessionStorage.getItem("auth_secret_key")
-    const userId = sessionStorage.getItem("account_id")
+    const authSecretKey = localStorage.getItem("auth_secret_key")
+    const userId = localStorage.getItem("account_id")
 
     const game = confirmPopup.game
     setLoadingForGames(game["Game UID"])
     setConfirmLoading(true)
-    setConfirmPopup({ show: false, game: confirmPopup.game, error: null })
 
     try {
       const response = await fetch(API_URL, {
@@ -145,20 +151,33 @@ const GameSection = ({ title, games }) => {
           game: game,
           error: "balance_error",
         })
-      } else if (data.error) {
-        console.error("Error:", data.status_code || data.error)
-        setConfirmPopup({ show: false, game: null, error: null })
+      } else if (data.status_code === "authorization_error") {
+        setConfirmPopup({
+          show: true,
+          game: game,
+          error: "authorization_error",
+        })
+      } else if (data.error || !data.data?.game_url) {
+        console.error("Error launching game:", data.status_code || data.error || "No game URL")
+        setConfirmPopup({
+          show: true,
+          game: game,
+          error: data.status_code || "unknown_error",
+        })
       } else if (data.data?.game_url) {
         setTimeout(() => {
-          navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(game["Game Name"])}`)
+          // Base64 encode the URL to prevent issues with slashes and special characters in the route
+          const encodedUrl = btoa(data.data.game_url);
+          navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(game["Game Name"])}`)
         }, 500)
-      } else {
-        console.error("No game URL in the response.")
-        setConfirmPopup({ show: false, game: null, error: null })
       }
     } catch (error) {
       console.error("Error logging game click:", error)
-      setConfirmPopup({ show: false, game: null, error: null })
+      setConfirmPopup({
+        show: true,
+        game: game,
+        error: "network_error",
+      })
     } finally {
       setTimeout(() => {
         setLoadingForGames(null)
@@ -169,7 +188,8 @@ const GameSection = ({ title, games }) => {
 
   return (
     <div
-      className="game-section relative w-full px-4 py-5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 border border-black/5 dark:border-white/5"
+      id={sectionId}
+      className="game-section relative w-full px-4 py-5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 border border-black/5 dark:border-white/5 scroll-mt-24 md:scroll-mt-32"
       style={{
         backgroundColor: `${COLORS.bg2}EE`,
         backdropFilter: "blur(10px)",
@@ -374,7 +394,7 @@ const GameSection = ({ title, games }) => {
         )}
 
       {confirmPopup.show && createPortal(
-        <div className="fixed inset-0 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[99999] transition-all duration-500 animate-fadeIn">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[100000] transition-all duration-500 animate-fadeIn">
           <div
             className="relative p-10 rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] max-w-sm w-full mx-6 animate-fadeInUp border border-black/10 dark:border-white/10 text-center"
             style={{
@@ -404,6 +424,30 @@ const GameSection = ({ title, games }) => {
                     A minimum deposit of <span className="text-black dark:text-white font-bold">₹100</span> is required to access this premium experience.
                   </p>
                 </div>
+              ) : confirmPopup.error === "authorization_error" ? (
+                <div className="space-y-3">
+                  <h3
+                    className="text-xl font-black text-red-500 tracking-tight uppercase"
+                    style={{ fontFamily: FONTS.head }}
+                  >
+                    Session Expired
+                  </h3>
+                  <p className="text-black/60 dark:text-white/60 text-sm leading-relaxed px-2">
+                    Your session has expired or you are not authorized to play this game. Please try logging in again.
+                  </p>
+                </div>
+              ) : confirmPopup.error ? (
+                <div className="space-y-3">
+                  <h3
+                    className="text-xl font-black text-red-500 tracking-tight uppercase"
+                    style={{ fontFamily: FONTS.head }}
+                  >
+                    Game Unavailable
+                  </h3>
+                  <p className="text-black/60 dark:text-white/60 text-sm leading-relaxed px-2">
+                    This game is currently unavailable ({confirmPopup.error}). Please try another one.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <h3
@@ -431,6 +475,31 @@ const GameSection = ({ title, games }) => {
                   <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <span>Add Funds</span>
                 </button>
+              ) : confirmPopup.error === "authorization_error" ? (
+                <button
+                  onClick={() => {
+                    localStorage.clear();
+                    window.dispatchEvent(new Event('site-data-refresh'));
+                    navigate("/");
+                    window.location.reload();
+                  }}
+                  className="w-full px-6 py-4 rounded-2xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 group overflow-hidden relative text-black dark:text-white"
+                  style={{ background: COLORS.brandGradient, fontFamily: FONTS.ui }}
+                >
+                  <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <span>Log In Again</span>
+                </button>
+              ) : confirmPopup.error ? (
+                <button
+                  onClick={() => {
+                    setConfirmPopup({ show: false, game: null, error: null });
+                  }}
+                  className="w-full px-6 py-4 rounded-2xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 group overflow-hidden relative text-black dark:text-white"
+                  style={{ background: COLORS.brandGradient, fontFamily: FONTS.ui }}
+                >
+                  <div className="absolute inset-0 bg-gray-100 dark:bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <span>Try Other Game</span>
+                </button>
               ) : (
                 <button
                   onClick={confirmGameOpen}
@@ -456,7 +525,7 @@ const GameSection = ({ title, games }) => {
       )}
 
       {confirmLoading && createPortal(
-        <div className="fixed inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[999999] flex flex-col items-center justify-center transition-all duration-700 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[100000] flex flex-col items-center justify-center transition-all duration-700 animate-fadeIn">
           <div
             className="w-full max-w-md px-8 py-10 rounded-[2.5rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] border border-black/10 dark:border-white/10 relative overflow-hidden text-center"
             style={{
@@ -508,14 +577,14 @@ const GameSection = ({ title, games }) => {
                 </div>
               </div>
               <div className="flex justify-between mt-3 px-1">
-                <span className="text-[10px] text-black/40 dark:text-white/40 font-bold uppercase tracking-widest">Secure Link</span>
+                <span className="text-[10px] text-black/40 dark:text-white/40 font-bold uppercase tracking-widest">Connection Status</span>
                 <span className="text-[10px] text-brand font-black italic">{Math.round(loadingProgress)}%</span>
               </div>
             </div>
 
             <div className="relative z-10 space-y-4 px-2 mb-10 text-left">
               {[
-                { label: "Establishing Secure Tunnel", threshold: 30 },
+                { label: "Establishing Connection", threshold: 30 },
                 { label: "Syncing Game Assets", threshold: 60 },
                 { label: "Optimizing Performance", threshold: 85 }
               ].map((step, i) => (
@@ -564,10 +633,10 @@ const GamesDisplay = () => {
   return (
     <div className="games-display space-y-3">
       {" "}
-      <GameSection title="🎮 Trending Slot" games={slotgames} />
-      <GameSection title="🔴 Casino" games={cusinolive} />
-      <GameSection title="🐟 Fishing" games={fishgames} />
-      <GameSection title="♤ Indian Poker Games" games={indianpokergames} />
+      <GameSection id="slots" title="🎮 Trending Slot" games={slotgames} />
+      <GameSection id="casino" title="🔴 Casino" games={cusinolive} />
+      <GameSection id="fishing" title="🐟 Fishing" games={fishgames} />
+      <GameSection id="poker" title="♤ Indian Poker Games" games={indianpokergames} />
     </div>
   )
 }

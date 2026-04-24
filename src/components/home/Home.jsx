@@ -27,7 +27,7 @@ function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const checkAuth = () => {
-    const authSecretKey = sessionStorage.getItem("auth_secret_key")
+    const authSecretKey = localStorage.getItem("auth_secret_key")
     const wasAuthenticated = isAuthenticated
     const isNowAuthenticated = !!authSecretKey
 
@@ -47,9 +47,9 @@ function Home() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      
-      const justLoggedIn = sessionStorage.getItem("just_logged_in") === "true"
-      const authSecretKey = sessionStorage.getItem("auth_secret_key")
+
+      const justLoggedIn = localStorage.getItem("just_logged_in") === "true"
+      const authSecretKey = localStorage.getItem("auth_secret_key")
       const isLoggedIn = !!authSecretKey
 
       setIsAuthenticated(isLoggedIn)
@@ -57,7 +57,7 @@ function Home() {
       if (isLoggedIn) {
         if (justLoggedIn) {
           setShowSuccessToast(true)
-          sessionStorage.removeItem("just_logged_in")
+          localStorage.removeItem("just_logged_in")
           setTimeout(() => setShowSuccessToast(false), 5000)
         }
       }
@@ -78,6 +78,11 @@ function Home() {
   }, [isAuthenticated])
 
   useEffect(() => {
+    document.body.classList.add("show-whatsapp")
+    return () => document.body.classList.remove("show-whatsapp")
+  }, [])
+
+  useEffect(() => {
     if (window.location.hash) {
       const id = window.location.hash.substring(1)
       const element = document.getElementById(id)
@@ -94,17 +99,17 @@ function Home() {
       {showToast && !isAuthenticated && <ToastMessage onClose={() => setShowToast(false)} />}
       {showSuccessToast && <SuccessToastMessage onClose={() => setShowSuccessToast(false)} />}
 
-      <Navbar externalAccountInfo={accountInfo} />
       <main className="flex-grow" style={{ backgroundColor: COLORS.bg }}>
-        <div className="w-full relative">
+        <Navbar externalAccountInfo={accountInfo} />
+        <div className="px-0 md:px-0">
           <FrontScrollableCard banners={heroBanners} />
         </div>
         <NewsTicker />
-        <div className="px-4 md:px-8 mt-2 md:mt-4">
-          <div className="mb-3 md:mb-4" id="slots-trending">
+        <div className="px-4 md:px-8 mt-0.5 md:mt-1">
+          <div className="mb-3 md:mb-4" id="trending-slots">
             <TrendingSlot />
           </div>
-          <div className="mb-3 md:mb-4" id="live">
+          <div className="mb-3 md:mb-4">
             <Live />
           </div>
           <div className="mb-3 md:mb-4" id="aviator">

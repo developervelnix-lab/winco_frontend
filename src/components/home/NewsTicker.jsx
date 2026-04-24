@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useColors } from '../../hooks/useColors';
 import { FONTS } from '../../constants/theme';
-import { Gamepad2 } from 'lucide-react';
+import { Newspaper } from 'lucide-react';
 import { useSite } from '../../context/SiteContext';
 
 const NewsTicker = () => {
@@ -17,65 +17,53 @@ const NewsTicker = () => {
 
     return (
         <div 
-            className="w-full h-10 md:h-12 flex items-center overflow-hidden border-y border-black/5 dark:border-white/5 relative z-20"
+            className="w-full h-8 md:h-10 flex items-center overflow-hidden border-y border-white/5 relative z-20 group"
             style={{ 
-                backgroundColor: COLORS.bg2,
-                backdropFilter: 'blur(10px)'
+                backgroundColor: '#000000',
             }}
         >
-            {/* Title / Icon Sidebar */}
+            {/* Title / Icon Sidebar (LEFT) */}
             <div 
-                className="absolute left-0 top-0 bottom-0 px-4 md:px-6 flex items-center gap-2 z-40 shadow-[10px_0_20px_-5px_rgba(0,0,0,0.1)] dark:shadow-[10px_0_20px_-5px_rgba(0,0,0,0.5)]"
-                style={{ background: COLORS.brandGradient }}
+                className="absolute left-0 top-0 bottom-0 px-3 md:px-5 flex items-center gap-2 z-40 bg-[#F59E0B]"
+                style={{ clipPath: 'polygon(0 0, 95% 0, 100% 100%, 0 100%)' }}
             >
-                <Gamepad2 size={16} className="text-white animate-pulse" />
-                <span 
-                    className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white leading-none whitespace-nowrap"
-                    style={{ fontFamily: FONTS.head }}
-                >
-                    Upcoming Games
-                </span>
+                <div className="flex items-center gap-1.5">
+                    <Newspaper size={14} className="text-black" />
+                    <span 
+                        className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-black leading-none whitespace-nowrap"
+                        style={{ fontFamily: FONTS.head }}
+                    >
+                        Latest News
+                    </span>
+                </div>
             </div>
 
             {/* Scrolling Container */}
             <div className="flex-grow h-full relative overflow-hidden flex items-center">
                 <motion.div
                     className="flex whitespace-nowrap items-center"
-                    animate={{ x: [0, -2000] }}
+                    animate={{ x: [0, -1000] }}
                     transition={{
                         x: {
                             repeat: Infinity,
                             repeatType: "loop",
-                            duration: 40,
+                            duration: 25,
                             ease: "linear",
                         },
                     }}
                 >
-                    {[1, 2, 3].map((i) => (
+                    {[1, 2].map((i) => (
                         <div key={i} className="flex items-center">
-                            {scrollingText.map((item, idx) => (
-                                <div key={idx} className="flex items-center px-8">
-                                    <span className="text-[10px] md:text-xs font-black text-brand uppercase tracking-tighter mr-3 px-2 py-0.5 rounded bg-brand/10 border border-brand/20">
-                                        {item.icon} {item.label}
-                                    </span>
-                                    <span 
-                                        className="text-[10px] md:text-sm font-bold uppercase tracking-wide text-black/70 dark:text-white/80"
-                                        style={{ fontFamily: FONTS.ui }}
-                                    >
-                                        {item.content}
-                                    </span>
-                                    <span className="mx-6 text-black/10 dark:text-white/10">|</span>
-                                </div>
-                            ))}
+                            <span 
+                                className="text-[10px] md:text-[11px] font-bold uppercase tracking-wide text-white/90 px-4"
+                                style={{ fontFamily: FONTS.ui }}
+                            >
+                                {accountInfo?.service_marquee || "Welcome to Winco! Experience the best betting and casino platform. Daily rewards and instant withdrawals available now."}
+                            </span>
+                            <span className="mx-4 text-white/20">I</span>
                         </div>
                     ))}
                 </motion.div>
-                
-                {/* Fade overlays for smooth scrolling into/out of the sidebar */}
-                <div className="absolute inset-y-0 left-[120px] md:left-[160px] w-12 pointer-events-none z-20" 
-                     style={{ background: `linear-gradient(to right, ${COLORS.bg2}, transparent)` }}></div>
-                <div className="absolute inset-y-0 right-0 w-24 pointer-events-none z-20"
-                     style={{ background: `linear-gradient(to left, ${COLORS.bg2}, transparent)` }}></div>
             </div>
         </div>
     );

@@ -11,6 +11,7 @@ import { FONTS } from '../../constants/theme';
 const Register = ({ onSwitchToLogin, onClose }) => {
   const COLORS = useColors();
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [username, setUsername] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,6 +20,7 @@ const Register = ({ onSwitchToLogin, onClose }) => {
   const [otpError, setOtpError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [successView, setSuccessView] = useState(false);
   const [toast, setToast] = useState(null);
 
   const showToast = (type, message) => {
@@ -57,6 +59,10 @@ const Register = ({ onSwitchToLogin, onClose }) => {
 
   const handleReferralChange = (e) => {
     setReferralCode(e.target.value);
+  };
+
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
   };
 
   const handleGetOtp = async () => {
@@ -121,6 +127,7 @@ const Register = ({ onSwitchToLogin, onClose }) => {
         },
         body: JSON.stringify({
           SIGNUP_MOBILE: phoneNumber,
+          SIGNUP_USERNAME: username,
           SIGNUP_PASSWORD: password,
           SIGNUP_OTP: otp,
           SIGNUP_INVITE_CODE: referralCode || "",
@@ -130,16 +137,20 @@ const Register = ({ onSwitchToLogin, onClose }) => {
       const data = await response.json();
 
       if (data.status_code === "success") {
-        showToast("success", "Registration successful!");
-        sessionStorage.setItem("auth_secret_key", data.data[0].auth_secret_key);
-        sessionStorage.setItem("account_id", data.data[0].account_id);
+        localStorage.setItem("auth_secret_key", data.data[0].auth_secret_key);
+        localStorage.setItem("account_id", data.data[0].account_id);
         
         // Trigger global data refresh for same-tab components
         window.dispatchEvent(new Event('site-data-refresh'));
         
-        if (onClose) onClose();
+        setSuccessView(true);
+        setTimeout(() => {
+          if (onClose) onClose();
+        }, 2500);
       } else if (data.status_code === "already_registered") {
         showToast("error", "Already registered! Please login.");
+      } else if (data.status_code === "username_exists") {
+        showToast("error", "Username already exists! Please choose another.");
       } else {
         showToast("error", "Registration failed! Please try again.");
       }
@@ -165,158 +176,210 @@ const Register = ({ onSwitchToLogin, onClose }) => {
             <FontAwesomeIcon icon={faTimes} className="w-3.5 h-3.5" />
           </button>
 
-          {/* Logo/Title Area */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-black uppercase tracking-wider mb-1" style={{ color: COLORS.text, fontFamily: FONTS.display }}>
-              Create <span style={{ color: COLORS.brand }}>Account</span>
-            </h2>
-            <p className="text-[10px]" style={{ color: COLORS.muted, fontFamily: FONTS.ui }}>
-              Join us and start your winning journey!
-            </p>
-          </div>
-
-          <form onSubmit={handleRegister} className="space-y-4 relative z-10">
-            <div className="flex items-center gap-3">
-              <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
-                Mobile
-              </label>
-              <div className="flex-grow flex gap-2">
-                <div className="flex-grow relative group">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <span className="text-xs font-bold" style={{ color: COLORS.brand }}>+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={handlePhoneChange}
-                    className="w-full pr-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
-                    placeholder="9999999999"
-                    disabled={otpSent}
-                    required
-                    style={{ fontFamily: FONTS.ui, paddingLeft: '45px' }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleGetOtp}
-                  disabled={isLoading || otpSent}
-                  className={`px-3 py-2 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg whitespace-nowrap text-[10px] ${
-                    otpSent ? "bg-black/5 dark:bg-white/10 text-black/40 dark:text-white/40" : "text-white"
-                  }`}
-                  style={{ 
-                    background: otpSent ? 'transparent' : COLORS.brandGradient,
-                    fontFamily: FONTS.head 
-                  }}
-                >
-                  {isLoading ? "..." : otpSent ? "SENT" : "Get OTP"}
-                </button>
+          {successView ? (
+            <div className="text-center py-8 animate-fade-in relative z-10">
+              <div className="mx-auto flex items-center justify-center h-24 w-24 rounded-full bg-green-500/10 mb-6 relative">
+                <div className="absolute inset-0 rounded-full bg-green-500/20 animate-ping"></div>
+                <svg className="h-12 w-12 text-green-500 z-10 animate-[bounce_1s_ease-in-out_infinite]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                </svg>
               </div>
+              <h2 className="text-2xl font-black uppercase tracking-wider mb-2 text-black dark:text-white" style={{ fontFamily: FONTS.display }}>
+                Registration <span className="text-green-500">Successful!</span>
+              </h2>
+              <p className="text-xs mb-8 text-black/60 dark:text-white/60" style={{ fontFamily: FONTS.ui }}>
+                Your account is ready. Time to start winning!
+              </p>
+              <button
+                onClick={onClose}
+                className="w-full py-3 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all duration-300 text-xs hover:scale-[1.02] shadow-xl"
+                style={{ background: COLORS.brandGradient, fontFamily: FONTS.head }}
+              >
+                Continue →
+              </button>
             </div>
-            {otpError && (
-              <div className="bg-red-500/10 border border-red-500/20 py-1.5 px-3 rounded-lg">
-                <p className="text-red-500 text-[10px] text-center font-medium">{otpError}</p>
+          ) : (
+            <>
+              {/* Logo/Title Area */}
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-black uppercase tracking-wider mb-1" style={{ color: COLORS.text, fontFamily: FONTS.display }}>
+                  Create <span style={{ color: COLORS.brand }}>Account</span>
+                </h2>
+                <p className="text-[10px]" style={{ color: COLORS.muted, fontFamily: FONTS.ui }}>
+                  Join us and start your winning journey!
+                </p>
               </div>
-            )}
 
-            {otpSent && (
-              <div className="space-y-3 animate-fade-in">
+              <div 
+                className="space-y-4 relative z-10"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!(isLoading || otp.length !== 6 || !password || !confirmPassword || passwordError || !username)) {
+                      handleRegister(e);
+                    }
+                  }
+                }}
+              >
                 <div className="flex items-center gap-3">
                   <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
-                    OTP Code
+                    Mobile
                   </label>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={handleOtpChange}
-                    className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs tracking-[0.2em] text-center font-bold shadow-inner"
-                    placeholder="••••••"
-                    maxLength={6}
-                    required
-                    style={{ fontFamily: FONTS.ui }}
-                  />
+                  <div className="flex-grow flex gap-2">
+                    <div className="flex-grow relative group">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <span className="text-xs font-bold" style={{ color: COLORS.brand }}>+91</span>
+                      </div>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={handlePhoneChange}
+                        className="w-full pr-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
+                        placeholder="9999999999"
+                        disabled={otpSent}
+                        required
+                        style={{ fontFamily: FONTS.ui, paddingLeft: '45px' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGetOtp}
+                      disabled={isLoading || otpSent}
+                      className={`px-3 py-2 rounded-xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg whitespace-nowrap text-[10px] ${
+                        otpSent ? "bg-black/5 dark:bg-white/10 text-black/40 dark:text-white/40" : "text-white"
+                      }`}
+                      style={{ 
+                        background: otpSent ? 'transparent' : COLORS.brandGradient,
+                        fontFamily: FONTS.head 
+                      }}
+                    >
+                      {isLoading ? "..." : otpSent ? "SENT" : "Get OTP"}
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
-                    placeholder="Create password"
-                    required
-                    style={{ fontFamily: FONTS.ui }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
-                    Confirm
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={handleConfirmPasswordChange}
-                    className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
-                    placeholder="Confirm password"
-                    required
-                    style={{ fontFamily: FONTS.ui }}
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
-                    Referral
-                  </label>
-                  <input
-                    type="text"
-                    value={referralCode}
-                    onChange={handleReferralChange}
-                    className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
-                    placeholder="Bonus code (Optional)"
-                    style={{ fontFamily: FONTS.ui }}
-                  />
-                </div>
-
-                {passwordError && (
+                {otpError && (
                   <div className="bg-red-500/10 border border-red-500/20 py-1.5 px-3 rounded-lg">
-                    <p className="text-red-500 text-[10px] text-center font-medium">{passwordError}</p>
+                    <p className="text-red-500 text-[10px] text-center font-medium">{otpError}</p>
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={isLoading || otp.length !== 6 || !password || !confirmPassword || passwordError}
-                  className="w-full py-3 mt-1 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all duration-300 text-xs hover:scale-[1.02] active:scale-[0.98] shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed group"
-                  style={{ background: COLORS.brandGradient, fontFamily: FONTS.head }}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {isLoading ? "Processing..." : "REGISTER NOW"}
-                    {!isLoading && (
-                      <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    )}
-                  </span>
-                </button>
-              </div>
-            )}
-          </form>
+                {otpSent && (
+                  <div className="space-y-3 animate-fade-in">
+                    <div className="flex items-center gap-3">
+                      <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={handleUsernameChange}
+                        className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
+                        placeholder="Create username"
+                        required
+                        style={{ fontFamily: FONTS.ui }}
+                      />
+                    </div>
 
-          <div className="mt-6 text-center border-t border-black/5 dark:border-white/5 pt-4">
-            <p className="text-[10px]" style={{ color: COLORS.muted, fontFamily: FONTS.ui }}>
-              Already registered?{" "}
-              <button 
-                onClick={onSwitchToLogin} 
-                className="font-bold hover:underline transition-all"
-                style={{ color: COLORS.brand }}
-              >
-                LOGIN HERE
-              </button>
-            </p>
-          </div>
+                    <div className="flex items-center gap-3">
+                      <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
+                        OTP Code
+                      </label>
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={handleOtpChange}
+                        className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs tracking-[0.2em] text-center font-bold shadow-inner"
+                        placeholder="••••••"
+                        maxLength={6}
+                        required
+                        style={{ fontFamily: FONTS.ui }}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={handlePasswordChange}
+                        className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
+                        placeholder="Create password"
+                        required
+                        style={{ fontFamily: FONTS.ui }}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
+                        Confirm
+                      </label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={handleConfirmPasswordChange}
+                        className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
+                        placeholder="Confirm password"
+                        required
+                        style={{ fontFamily: FONTS.ui }}
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="w-1/3 text-[10px] font-bold text-black/50 dark:text-white/50 uppercase tracking-widest block" style={{ fontFamily: FONTS.head }}>
+                        Referral
+                      </label>
+                      <input
+                        type="text"
+                        value={referralCode}
+                        onChange={handleReferralChange}
+                        className="flex-grow px-3 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-black dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all text-xs shadow-inner"
+                        placeholder="Bonus code (Optional)"
+                        style={{ fontFamily: FONTS.ui }}
+                      />
+                    </div>
+
+                    {passwordError && (
+                      <div className="bg-red-500/10 border border-red-500/20 py-1.5 px-3 rounded-lg">
+                        <p className="text-red-500 text-[10px] text-center font-medium">{passwordError}</p>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleRegister}
+                      disabled={isLoading || otp.length !== 6 || !password || !confirmPassword || passwordError || !username}
+                      className="w-full py-3 mt-1 text-white font-black uppercase tracking-[0.2em] rounded-xl transition-all duration-300 text-xs hover:scale-[1.02] active:scale-[0.98] shadow-xl disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed group"
+                      style={{ background: COLORS.brandGradient, fontFamily: FONTS.head }}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        {isLoading ? "Processing..." : "REGISTER NOW"}
+                        {!isLoading && (
+                          <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 text-center border-t border-black/5 dark:border-white/5 pt-4">
+                <p className="text-[10px]" style={{ color: COLORS.muted, fontFamily: FONTS.ui }}>
+                  Already registered?{" "}
+                  <button 
+                    onClick={onSwitchToLogin} 
+                    className="font-bold hover:underline transition-all"
+                    style={{ color: COLORS.brand }}
+                  >
+                    LOGIN HERE
+                  </button>
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

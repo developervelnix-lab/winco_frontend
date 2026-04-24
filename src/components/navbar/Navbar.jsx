@@ -8,24 +8,85 @@ import Register from "../auth/Register"
 import { useNavigate } from "react-router-dom"
 import AccountInfo from "./AccountInfo"
 import { allsport } from "../jsondata/sport"
-import { FaSignInAlt, FaUserPlus, FaMoneyCheckAlt, FaWallet, FaHeadset, FaDownload, FaExchangeAlt, FaHistory, FaGavel, FaShieldAlt, FaLock, FaUserShield, FaGift, FaStar, FaShareAlt, FaKey, FaSignOutAlt, FaWhatsapp, FaTelegramPlane, FaInstagram, FaFacebookF, FaTwitter, FaBars, FaTimes, FaUserCircle, FaSun, FaMoon, FaEnvelope } from "react-icons/fa"
+import { liveSport } from "../jsondata/live"
+import { FaSignInAlt, FaUserPlus, FaMoneyCheckAlt, FaWallet, FaHeadset, FaDownload, FaExchangeAlt, FaHistory, FaGavel, FaShieldAlt, FaLock, FaUserShield, FaGift, FaStar, FaShareAlt, FaKey, FaSignOutAlt, FaWhatsapp, FaTelegramPlane, FaInstagram, FaFacebookF, FaTwitter, FaBars, FaTimes, FaUserCircle, FaSun, FaMoon, FaEnvelope, FaTabletAlt, FaMobileAlt, FaArrowRight, FaClock, FaTrophy, FaGem, FaBell, FaTicketAlt } from "react-icons/fa"
 import { useSite } from "../../context/SiteContext"
 import { useColors } from '../../hooks/useColors';
 import { FONTS } from '../../constants/theme';
 import { useTheme } from "../../context/ThemeContext"
-import { URL as BASE_URL } from "../../utils/constants"
+import { URL as BASE_URL, API_URL } from "../../utils/constants"
+import { usePWAInstall } from "../../hooks/usePWAInstall"
+import AppInstallModal from "./AppInstallModal"
 
 function Navbar() {
   const { accountInfo, showLogin, setShowLogin, showRegister, setShowRegister, refreshSiteData } = useSite();
-  const authSecretKey = sessionStorage.getItem("auth_secret_key")
-  const userId = sessionStorage.getItem("account_id")
+  const isLoggedIn = !!(accountInfo?.account_id && localStorage.getItem("auth_secret_key"));
+  const authSecretKey = localStorage.getItem("auth_secret_key");
+  const userId = localStorage.getItem("account_id");
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
+  const [showAppInstallModal, setShowAppInstallModal] = useState(false)
   const navigate = useNavigate()
   const [toast, setToast] = useState(null)
+  const [trendingMatches, setTrendingMatches] = useState([
+    { name: "IPL: MI vs CSK · In Progress", viewers: 0 },
+    { name: "E-Sports: CSGO Major · Live", viewers: 0 },
+  ])
   const { theme, toggleTheme } = useTheme()
+  const remainingWager = parseFloat(accountInfo?.tbl_requiredplay_balance || 0);
+  const activeBonus = parseFloat(accountInfo?.tbl_bonus_balance || 0) + parseFloat(accountInfo?.tbl_sports_bonus || 0);
+  const isWagering = remainingWager > 0.1 || activeBonus > 0;
+
+  const wagerRequired = parseFloat(accountInfo?.wagering_required || 0);
+  const wagerCompleted = parseFloat(accountInfo?.wagering_completed || 0);
+  const wagerPct = isWagering && wagerRequired > 0
+    ? Math.min(100, Math.round((wagerCompleted / wagerRequired) * 100))
+    : 0;
+
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "route": "route-trending-matches",
+            "AuthToken": authSecretKey || "guest"
+          }
+        });
+        const res = await response.json();
+        if (res.status_code === "success") {
+          // Prefer rich `matches` array (has viewer counts)
+          if (res.matches?.length > 0) {
+            setTrendingMatches(res.matches.map(m => ({ name: m.name, viewers: m.viewers || 0 })));
+          } else if (res.data?.length > 0) {
+            setTrendingMatches(res.data.map(name => ({ name, viewers: 0 })));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch trending matches", err);
+      }
+    };
+    fetchTrending();
+    // Refresh every 2 minutes to keep ticker live
+    const interval = setInterval(fetchTrending, 120000);
+    return () => clearInterval(interval);
+  }, [authSecretKey]);
   const COLORS = useColors();
+  const { isInstallable, isInstalled, installApp, platform: currentDevice } = usePWAInstall();
+
+  // Logo URL Helper
+  const getSafeLogoUrl = (logoPath) => {
+    if (!logoPath || logoPath === "/favicon.png" || logoPath.includes('favicon.png')) return "/favicon.png";
+    if (logoPath.startsWith('http') || logoPath.startsWith('data:')) return logoPath;
+
+    // If it's a relative path from the backend, prepend BASE_URL
+    const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+    const path = logoPath.startsWith('/') ? logoPath : `/${logoPath}`;
+    return `${base}${path}`;
+  };
+
 
   // Add effect to prevent body scrolling when menu is open
   useEffect(() => {
@@ -61,6 +122,8 @@ function Navbar() {
     { name: "Boxing", icon: "🥊" },
     { name: "Volleyball", icon: "🏐" },
   ]
+  const [sportsLoading, setSportsLoading] = useState(false);
+
   const handleGameSelect = async (index) => {
     setSelectedGame(index);
 
@@ -70,7 +133,7 @@ function Navbar() {
       return
     }
 
-    console.log(allsport['Game UID'])
+    setSportsLoading(true);
     try {
       const response = await fetch(API_URL, {
         method: "POST",
@@ -91,15 +154,78 @@ function Navbar() {
       }
 
       const data = await response.json();
-      if (data.error) {
-        console.error("Error:", data.status_code || data.error);
-      } else if (data.data?.game_url) {
-        navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(allsport["Game Name"])}`);
+
+      if (data.status_code === "success" && data.data?.game_url) {
+        // Base64 encode the URL to prevent issues with slashes and special characters in the route
+        const encodedUrl = btoa(data.data.game_url);
+        navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(allsport["Game Name"])}`);
+      } else if (data.status_code === "balance_error") {
+        showToast("error", "Minimum balance of ₹100 required to play sports.");
+      } else if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
+        showToast("error", "Session expired. Please login again.");
+        localStorage.clear();
+        refreshSiteData();
+        setShowLogin(true);
+      } else if (data.status_code === "game_off") {
+        showToast("error", "Sports games are currently disabled by the admin.");
+      } else if (data.status_code === "server_error") {
+        showToast("error", "Game server error. Please try again later.");
+      } else if (data.status_code === "account_error") {
+        showToast("error", "Your account is suspended. Contact support.");
       } else {
-        console.error("No game URL in the response.");
+        showToast("error", data.status_code || "Failed to load sports. Please try again.");
+        console.error("Sports error:", data.status_code);
       }
     } catch (error) {
-      console.error("Error logging game click:", error);
+      showToast("error", "Network error. Please check your connection.");
+      console.error("Error loading sports game:", error);
+    } finally {
+      setSportsLoading(false);
+    }
+  };
+
+  const handleLiveSportSelect = async (gameObj) => {
+    if (!authSecretKey) {
+      setShowLogin(true)
+      return
+    }
+
+    setSportsLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          route: "route-play-games",
+          AuthToken: authSecretKey,
+        },
+        body: JSON.stringify({
+          USER_ID: userId,
+          GAME_NAME: gameObj["Game Name"],
+          GAME_UID: gameObj["Game UID"],
+        }),
+      });
+
+      if (!response.ok) throw new Error("Network response was not ok");
+      const data = await response.json();
+
+      if (data.status_code === "success" && data.data?.game_url) {
+        const encodedUrl = btoa(data.data.game_url);
+        navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(gameObj["Game Name"])}`);
+      } else if (data.status_code === "balance_error") {
+        showToast("error", "Minimum balance of ₹100 required to play sports.");
+      } else if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
+        showToast("error", "Session expired. Please login again.");
+        localStorage.clear();
+        refreshSiteData();
+        setShowLogin(true);
+      } else {
+        showToast("error", data.status_code || "Failed to load sports.");
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.");
+    } finally {
+      setSportsLoading(false);
     }
   };
   const handleLoginClick = () => {
@@ -156,9 +282,9 @@ function Navbar() {
     setMenuOpen(false)
     navigate("/privacy-policy")
   }
-  function handleContactUs() {
+  function handleSupport() {
     setMenuOpen(false)
-    navigate("/contact")
+    navigate("/support")
   }
   function handleLogoClick() {
     setMenuOpen(false)
@@ -167,6 +293,10 @@ function Navbar() {
   function handlePromotion() {
     setMenuOpen(false)
     navigate("/promotion")
+  }
+  function handleBonus() {
+    setMenuOpen(false)
+    navigate("/bonus")
   }
 
   const scrollToSection = (sectionId) => {
@@ -187,10 +317,10 @@ function Navbar() {
 
   useEffect(() => {
     if (accountInfo?.account_balance) {
-      sessionStorage.setItem("avl_balance", accountInfo.account_balance)
+      localStorage.setItem("avl_balance", accountInfo.account_balance)
     }
     if (accountInfo?.service_recharge_option) {
-      sessionStorage.setItem("deposit_options", accountInfo.service_recharge_option)
+      localStorage.setItem("deposit_options", accountInfo.service_recharge_option)
     }
   }, [accountInfo])
 
@@ -203,7 +333,8 @@ function Navbar() {
 
   function handleSignOut() {
     setMenuOpen(false)
-    sessionStorage.clear()
+    localStorage.clear()
+    refreshSiteData()
     navigate("/")
   }
 
@@ -228,15 +359,29 @@ function Navbar() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 w-full z-50 custom-header-wrapper">
+      <div className="fixed top-0 left-0 w-full z-[100] custom-header-wrapper shadow-lg">
         {/* TOPBAR */}
         <div className="topbar" style={{ backgroundColor: COLORS.bg, borderBottom: `1px solid ${COLORS.bg4}` }}>
           <div className="topbar-left">
-            <div className="topbar-item"><span style={{ color: COLORS.brand }}>🕐</span> IST {new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' })}</div>
-            <div className="live-badge" style={{ backgroundColor: COLORS.red }}>LIVE</div>
-            <div className="topbar-item">IPL 2025 — <span className="text-black dark:text-white">CSK vs MI · In Progress</span></div>
-            <div className="topbar-item">|</div>
-            <div className="topbar-item">Premier League — <span className="text-black dark:text-white">Arsenal vs Chelsea · 67'</span></div>
+            <div className="flex items-center gap-1.5 md:gap-4 whitespace-nowrap">
+              <div className="topbar-item"><span style={{ color: COLORS.brand }}>🕐</span> IST {new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' })}</div>
+              <div className="live-badge" style={{ backgroundColor: COLORS.red }}>LIVE</div>
+
+              {trendingMatches.slice(0, 2).map((match, idx) => (
+                <React.Fragment key={idx}>
+                  <div className="topbar-item cursor-pointer hover:text-brand transition-colors flex items-center gap-1.5" onClick={() => handleLiveSportSelect(liveSport[idx % liveSport.length])}>
+                    <span className="font-semibold" style={{ color: idx % 2 === 0 ? COLORS.red : COLORS.brand }}>{idx % 2 === 0 ? 'Live Match' : 'Trending'}</span>
+                    <span className="text-black dark:text-white">{match.name}</span>
+                    {match.viewers > 0 && (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${COLORS.brand}22`, color: COLORS.brand }}>
+                        {idx % 2 === 0 ? '🔴' : '👁'} {match.viewers.toLocaleString()} watching
+                      </span>
+                    )}
+                  </div>
+                  <div className="topbar-item opacity-20">|</div>
+                </React.Fragment>
+              ))}
+            </div>
           </div>
           <div className="topbar-right">
             <div className="topbar-item text-black/70 dark:text-white/70 hover:text-black dark:text-white cursor-pointer transition-colors">🇮🇳 IN</div>
@@ -251,29 +396,30 @@ function Navbar() {
             )}
             <div
               className="topbar-item hover:text-black dark:text-white cursor-pointer transition-colors text-black/70 dark:text-white/70"
-              onClick={handleContactUs}
+              onClick={handleSupport}
             >
               Support
             </div>
           </div>
         </div>
 
-        {/* HEADER */}
+        {/* 3. HEADER (LOGO, NAV, BUTTONS) */}
         <header className="custom-header" style={{ backgroundColor: `${COLORS.bg}F0`, backdropFilter: "blur(20px)", borderBottom: `1px solid ${COLORS.bg4}` }}>
           <div className="header-inner">
             <div className="custom-logo" onClick={handleLogoClick}>
               <img
-                src={accountInfo?.service_site_logo ? `${BASE_URL}${encodeURI(accountInfo.service_site_logo)}` : ""}
-                className="h-8 w-auto md:h-12 drop-shadow-[0_0_12px_rgba(230,160,0,0.3)] hover:scale-105 transition-transform duration-300"
-                alt={`${accountInfo?.service_site_name || 'Site'} Logo`}
+                src={getSafeLogoUrl(accountInfo?.service_site_logo)}
+                className="h-8 md:h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(230,160,0,0.3)] hover:scale-105 transition-transform duration-300"
+                alt="Logo"
+                onError={(e) => { e.target.src = "/favicon.png"; }}
               />
               {accountInfo?.service_tagline && (
-                <div className="logo-sub" style={{ borderLeft: `2px solid ${COLORS.brand}` }} dangerouslySetInnerHTML={{ __html: accountInfo.service_tagline }}></div>
+                <div className="logo-sub hidden md:block" style={{ borderLeft: `2px solid ${COLORS.brand}` }} dangerouslySetInnerHTML={{ __html: accountInfo.service_tagline }}></div>
               )}
             </div>
 
             <nav className="main-nav">
-              <button className="nav-link active" onClick={() => scrollToSection("live")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Sports</button>
+              <button className="nav-link" onClick={() => scrollToSection("live")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Sports</button>
               <button className="nav-link nav-live" onClick={() => scrollToSection("live")} style={{ color: COLORS.red, fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}><span className="dot" style={{ backgroundColor: COLORS.red }}></span>Live</button>
               <button className="nav-link" onClick={() => scrollToSection("casino")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Casino</button>
               <button className="nav-link" onClick={() => scrollToSection("slots")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Slots</button>
@@ -282,7 +428,7 @@ function Navbar() {
             </nav>
 
             <div className="header-cta">
-              {!authSecretKey ? (
+              {!isLoggedIn ? (
                 <>
                   <button className="btn-outline header-btn" onClick={handleLoginClick} style={{ fontFamily: FONTS.head, borderColor: COLORS.bg4 }}>Log In</button>
                   <button className="btn-primary header-btn" onClick={handleRegisterClick} style={{ background: COLORS.brandGradient, color: '#000', fontFamily: FONTS.head }}>Register</button>
@@ -293,57 +439,119 @@ function Navbar() {
                   <button className="btn-primary header-btn" onClick={() => navigate("/withdraw")} style={{ background: COLORS.brandGradient, color: '#000', fontFamily: FONTS.head }}>Withdraw</button>
                 </>
               )}
-              {/* Theme Toggle Button */}
+
+              {/* Wagering Progress Pill */}
+              {isWagering && (
+                <div
+                  className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-all group/wager"
+                  onClick={() => navigate('/active-bonus')}
+                  title="View Wagering Progress"
+                >
+                  <div className="flex flex-col items-end">
+                    <span className="text-[7px] font-black uppercase tracking-widest text-amber-500/60 leading-none">Wagering</span>
+                    <span className="text-[10px] font-black text-amber-500 leading-tight">{wagerPct}%</span>
+                  </div>
+                  <div className="w-10 h-1 rounded-full bg-amber-500/20 overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 transition-all duration-1000"
+                      style={{ width: `${wagerPct}%` }}
+                    ></div>
+                  </div>
+                  <FaGift className="text-amber-500 text-[10px] animate-bounce" />
+                </div>
+              )}
               <button
-                className={`ml-2 p-1.5 md:p-2 rounded-xl transition-all duration-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10`}
+                className={`flex p-1.5 md:p-2 rounded-xl transition-all duration-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10`}
                 onClick={toggleTheme}
                 title="Toggle Light/Dark Theme"
               >
                 {theme === 'dark' ? (
-                  <FaSun className="text-xl text-yellow-500" />
+                  <FaSun className="text-lg md:text-xl text-yellow-500" />
                 ) : (
-                  <FaMoon className="text-xl text-black/90 dark:text-white/90" />
+                  <FaMoon className="text-lg md:text-xl text-black/90 dark:text-white/90" />
                 )}
               </button>
+
+              {/* Native-style App Launcher (mimicking browser search bar button) */}
+              {isInstalled && (
+                <button
+                  onClick={() => {
+                    // With launch_handler in manifest, opening the app URL 
+                    // will focus/launch the installed standalone PWA window
+                    window.open(window.location.origin, '_blank');
+                  }}
+                  className="hidden lg:flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1A1A1A] border border-white/10 text-white hover:bg-white/10 transition-all shadow-lg group relative overflow-hidden"
+                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <div className="w-5 h-5 rounded bg-white flex items-center justify-center overflow-hidden transition-colors">
+                    <img
+                      src={getSafeLogoUrl(accountInfo?.service_site_logo)}
+                      className="w-full h-full object-contain p-0.5"
+                      alt="Logo"
+                      onError={(e) => { e.target.src = "/favicon.png"; }}
+                    />
+                  </div>
+                  <span className="text-[11px] font-medium tracking-wide">Open in app</span>
+                </button>
+              )}
+
+              {/* Notification Button */}
+              {isLoggedIn && (
+                <button
+                  className={`p-1.5 md:p-2 rounded-xl transition-all duration-300 bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 relative`}
+                  onClick={() => navigate('/notifications')}
+                  title="Notifications"
+                >
+                  <FaBell className="text-lg md:text-xl text-black/90 dark:text-white/90" />
+                  {(() => {
+                    const history = JSON.parse(localStorage.getItem("notifications_history") || "[]");
+                    const acknowledged = JSON.parse(localStorage.getItem("acknowledged_notices") || "[]");
+                    const hasUnread = history.some(n => !acknowledged.includes(n.id));
+                    return hasUnread ? <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-black animate-pulse"></span> : null;
+                  })()}
+                </button>
+              )}
+
+              {/* Profile Toggle */}
+              {isLoggedIn && (
+                <button
+                  className={`p-1.5 md:p-2 rounded-xl transition-all duration-300 ${profileOpen ? 'bg-brand/20' : 'bg-gray-100 dark:bg-white/5'}`}
+                  onClick={() => {
+                    setProfileOpen(!profileOpen)
+                    setMenuOpen(false)
+                  }}
+                >
+                  <FaUserCircle className="text-lg md:text-xl" style={{ color: profileOpen ? COLORS.brand : COLORS.text }} />
+                </button>
+              )}
+
               {/* Mobile Menu Toggle */}
               <button
-                className={`mobile-menu-btn ml-2 md:ml-4 p-1.5 md:p-2 rounded-xl transition-all duration-300 ${menuOpen ? 'bg-gray-100 dark:bg-white/10 rotate-90' : 'bg-gray-100 dark:bg-white/5'}`}
+                className={`mobile-menu-btn p-1.5 md:p-2 rounded-xl transition-all duration-300 ${menuOpen ? 'bg-gray-100 dark:bg-white/10 rotate-90' : 'bg-gray-100 dark:bg-white/5'}`}
                 onClick={() => {
                   setMenuOpen(!menuOpen)
                   setProfileOpen(false)
                 }}
               >
                 {menuOpen ? (
-                  <FaTimes className="text-xl" style={{ color: COLORS.brand }} />
+                  <FaTimes className="text-lg md:text-xl" style={{ color: COLORS.brand }} />
                 ) : (
-                  <FaBars className="text-xl text-black/70 dark:text-white/70" />
+                  <FaBars className="text-lg md:text-xl text-black/70 dark:text-white/70" />
                 )}
               </button>
-
-              {/* Profile Toggle */}
-              {authSecretKey && (
-                <button
-                  className={`ml-2 p-1.5 md:p-2 rounded-xl transition-all duration-300 ${profileOpen ? 'bg-brand/20' : 'bg-gray-100 dark:bg-white/5'}`}
-                  onClick={() => {
-                    setProfileOpen(!profileOpen)
-                    setMenuOpen(false)
-                  }}
-                >
-                  <FaUserCircle className="text-xl" style={{ color: profileOpen ? COLORS.brand : COLORS.text }} />
-                </button>
-              )}
             </div>
           </div>
         </header>
 
-        {/* SPORT TABS */}
+        {/* 4. SPORT TABS (TAGS) - MOVED TO BOTTOM OF STICKY */}
         <div className="sport-tabs-bar" style={{ backgroundColor: COLORS.bg2, borderBottom: `1px solid ${COLORS.bg4}` }}>
           <div className="sport-tabs-inner">
             {games.map((game, index) => (
               <button
                 key={index}
                 onClick={() => handleGameSelect(index)}
-                className={`sport-tab ${selectedGame === index ? "active" : ""}`}
+                disabled={sportsLoading}
+                className={`sport-tab ${selectedGame === index ? "active" : ""} ${sportsLoading ? "opacity-60 cursor-wait" : ""}`}
                 style={{
                   fontFamily: FONTS.head,
                   color: selectedGame === index ? COLORS.brand : '',
@@ -354,20 +562,26 @@ function Navbar() {
                   .sport-tab.active::after { background: ${COLORS.brand}; transform: scaleX(1); }
                   .sport-tab:hover::after { background: ${COLORS.brand}; }
                 `}</style>
-                <span className="tab-icon">{game.icon}</span> {game.name}
+                {sportsLoading && selectedGame === index ? (
+                  <span className="tab-icon animate-spin">⏳</span>
+                ) : (
+                  <span className="tab-icon">{game.icon}</span>
+                )}
+                {" "}{game.name}
               </button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Spacer div to push content below the fixed navbar */}
-      <div className="h-[100px] md:h-[144px] w-full"></div>
+      </div>
+      {/* Navbar Layout Spacer (Ensures content starts below the fixed navbar with a slight gap on ALL pages) */}
+      <div className="h-[120px] md:h-[140px] relative w-full"></div>
+
 
       {/* Background Overlay with Blur Effect */}
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-black/10 dark:bg-black/50 backdrop-blur-sm transition-all duration-300 z-40"
+          className="fixed inset-0 bg-black/10 dark:bg-black/50 backdrop-blur-sm transition-all duration-300 z-[190]"
           onClick={() => setMenuOpen(false)}
         ></div>
       )}
@@ -375,83 +589,91 @@ function Navbar() {
       {/* Profile Sidebar Backdrop */}
       {profileOpen && (
         <div
-          className="fixed inset-0 bg-black/10 dark:bg-black/50 backdrop-blur-sm transition-all duration-300 z-40"
+          className="fixed inset-0 bg-black/10 dark:bg-black/50 backdrop-blur-sm transition-all duration-300 z-[190]"
           onClick={() => setProfileOpen(false)}
         ></div>
       )}
 
       {/* Profile Sidebar (Side Pop-up) */}
-      <div
-        className={`fixed top-0 right-0 h-full w-[85%] md:w-[350px] backdrop-blur-3xl transform ${profileOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-[60] border-l border-black/5 dark:border-white/5 flex flex-col shadow-2xl`}
-        style={{ backgroundColor: `${COLORS.bg2}FB` }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-black/5 dark:border-white/5 bg-white/[0.02]">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-6 rounded-full" style={{ background: COLORS.brandGradient }}></div>
-            <h2 className="text-black dark:text-white font-black uppercase tracking-widest text-sm" style={{ fontFamily: FONTS.head }}>Account Details</h2>
-          </div>
-          <button
-            onClick={() => setProfileOpen(false)}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black/50 dark:text-white/50 transition-all"
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* User Details */}
-        <div className="flex-1 p-6 space-y-6">
-          <div className="text-center relative">
-            <div className="w-16 h-16 rounded-2xl mx-auto mb-3 border-2 border-brand/20 p-1 relative">
-              <div className="w-full h-full rounded-xl overflow-hidden bg-brand/10 flex items-center justify-center">
-                <img
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${accountInfo?.account_username || 'User'}&backgroundColor=ffad33&bold=true`}
-                  className="w-full h-full object-cover"
-                  alt="Avatar"
-                />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-[#111111]"></div>
+      {isLoggedIn && profileOpen && (
+        <div
+          className={`fixed top-0 right-0 h-full w-[85%] md:w-[350px] backdrop-blur-3xl transform ${profileOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-[200] border-l border-black/5 dark:border-white/5 flex flex-col shadow-2xl`}
+          style={{ backgroundColor: `${COLORS.bg2}FB` }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-black/5 dark:border-white/5 bg-white/[0.02]">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-6 rounded-full" style={{ background: COLORS.brandGradient }}></div>
+              <h2 className="text-black dark:text-white font-black uppercase tracking-widest text-sm" style={{ fontFamily: FONTS.head }}>Account Details</h2>
             </div>
-            <h3 className="text-sm font-black uppercase tracking-tight" style={{ fontFamily: FONTS.head, color: COLORS.text }}>
-              {accountInfo?.account_username || "Guest User"}
-            </h3>
+            <button
+              onClick={() => setProfileOpen(false)}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black/50 dark:text-white/50 transition-all"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="space-y-2">
-            {[
-              { label: "Profile ID", value: accountInfo?.account_id || "—" },
-              { label: "Username", value: accountInfo?.account_username || "—" },
-              { label: "Email", value: accountInfo?.account_email || "—" },
-              { label: "Mobile", value: accountInfo?.account_mobile || "—" },
-            ].map((detail, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl transition-all" style={{ backgroundColor: COLORS.bg4, border: `1px solid ${COLORS.bg3}` }}>
-                <p className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: COLORS.text }}>{detail.label}</p>
-                <p className="text-[10px] font-bold truncate max-w-[150px]" style={{ color: COLORS.text }}>{detail.value}</p>
+          {/* User Details */}
+          <div className="flex-1 p-6 space-y-6">
+            <div className="text-center relative">
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-3 border-2 border-brand/20 p-1 relative">
+                <div className="w-full h-full rounded-xl overflow-hidden bg-brand/10 flex items-center justify-center">
+                  <img
+                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${accountInfo?.account_username || 'User'}&backgroundColor=ffad33&bold=true`}
+                    className="w-full h-full object-cover"
+                    alt="Avatar"
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-[#111111]"></div>
               </div>
-            ))}
+              <h3 className="text-sm font-black uppercase tracking-tight" style={{ fontFamily: FONTS.head, color: COLORS.text }}>
+                {accountInfo?.account_username || "Guest User"}
+              </h3>
+            </div>
 
-            {/* Inlined Actions */}
-            <div className="pt-4 space-y-2">
-              <button
-                onClick={() => { setProfileOpen(false); navigate("/change-password"); }}
-                className="w-full py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:text-white hover:bg-gray-100 dark:bg-white/5 transition-all text-center"
-              >
-                Change Password
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-[0.2em] border border-red-500/20"
-              >
-                Sign Out
-              </button>
+            <div className="space-y-2">
+              {[
+                { label: "User ID", value: accountInfo?.account_id || "—" },
+                { label: "Username", value: accountInfo?.account_username || "—" },
+                { label: "Email", value: accountInfo?.account_email || "—" },
+                { label: "Mobile", value: accountInfo?.account_mobile || "—" },
+              ].map((detail, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl transition-all" style={{ backgroundColor: COLORS.bg4, border: `1px solid ${COLORS.bg3}` }}>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: COLORS.text }}>{detail.label}</p>
+                  <p className="text-[10px] font-bold truncate max-w-[150px]" style={{ color: COLORS.text }}>{detail.value}</p>
+                </div>
+              ))}
+
+              {/* Inlined Actions */}
+              <div className="pt-4 space-y-2">
+                <button
+                  onClick={() => { setProfileOpen(false); navigate("/support"); }}
+                  className="w-full py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:text-white hover:bg-gray-100 dark:bg-white/5 transition-all text-center"
+                >
+                  My Tickets
+                </button>
+                <button
+                  onClick={() => { setProfileOpen(false); navigate("/change-password"); }}
+                  className="w-full py-2.5 rounded-xl border border-black/10 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-black/40 dark:text-white/40 hover:text-black dark:text-white hover:bg-gray-100 dark:bg-white/5 transition-all text-center"
+                >
+                  Change Password
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-[0.2em] border border-red-500/20"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-4/5 md:w-3/5 lg:w-[22%] backdrop-blur-3xl transform ${menuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-[70] border-l border-black/5 dark:border-white/5 flex flex-col shadow-2xl`}
+        className={`fixed top-0 right-0 h-full w-4/5 md:w-3/5 lg:w-[22%] backdrop-blur-3xl transform ${menuOpen ? "translate-x-0" : "translate-x-full"} transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-[200] border-l border-black/5 dark:border-white/5 flex flex-col shadow-2xl`}
         style={{ backgroundColor: `${COLORS.bg2}E6` }}
       >
         {/* Sidebar Header */}
@@ -471,57 +693,106 @@ function Navbar() {
         {/* Sidebar Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 pb-32 lg:pb-6 space-y-6">
           {/* Account Info Card */}
-          <div className="group transition-all duration-500">
-            {accountInfo && <AccountInfo accountInfo={accountInfo} />}
-          </div>
+          {isLoggedIn && (
+            <div className="group transition-all duration-500">
+              <AccountInfo accountInfo={accountInfo} />
+            </div>
+          )}
 
           <div className="space-y-6">
-            {/* Help & Support Section */}
+            {/* Discovery Section */}
+            <div className="space-y-2 hidden">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Discover Lobby</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { icon: <FaTrophy />, label: "Sports", action: () => { setMenuOpen(false); navigate('/?show_all=live'); } },
+                  { icon: <FaGem />, label: "Casino", action: () => { setMenuOpen(false); navigate('/?show_all=casino'); } },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="group flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-100/50 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 text-center"
+                    onClick={item.action}
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-2 transition-transform duration-300 group-hover:scale-110">
+                      {React.cloneElement(item.icon, { size: 14 })}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-black/70 dark:text-white/70 group-hover:text-black dark:text-white" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Service Center Section */}
             <div className="space-y-2">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Service Center</h3>
               <div className="grid grid-cols-1 gap-1.5">
                 {[
                   ...(accountInfo?.service_support_url ? [{ icon: <FaHeadset />, label: "Chat With Us", action: handleChatWithUs }] : []),
-                  { icon: <FaDownload />, label: "Download APK", action: () => window.open("https://winco.cc/Winco.apk", "_blank") },
+                  {
+                    icon: <FaDownload />,
+                    label: isInstalled ? "Go to App" : "Get App",
+                    action: () => {
+                      setMenuOpen(false);
+                      if (isInstalled) {
+                        // launch_handler in manifest routes this to the standalone window
+                        window.open(window.location.origin, '_blank');
+                      } else if (currentDevice === 'android') {
+                        window.open(accountInfo?.service_apk_url || "/winco.apk", "_blank");
+                      } else if (isInstallable) {
+                        installApp();
+                      } else {
+                        // Fallback: open in new tab, launch_handler may still catch it
+                        window.open(window.location.origin, '_blank');
+                      }
+                    },
+                    premium: true,
+                    highlight: true
+                  },
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="group relative flex items-center p-2 rounded-xl bg-gray-100 dark:bg-white/2 hover:bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer overflow-hidden"
+                    className={`group relative flex items-center p-3 rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden border ${item.premium ? 'bg-gradient-to-r from-brand/20 to-brand/5 border-brand/30 shadow-lg' : 'bg-gray-100/50 dark:bg-white/2 hover:bg-black/5 dark:hover:bg-white/5 border-black/5 dark:border-white/5'}`}
                     onClick={item.action}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center text-brand mr-2.5 group-hover:scale-110 transition-transform">
-                      {React.cloneElement(item.icon, { size: 10 })}
+                    {item.premium && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-brand/10 to-transparent animate-shimmer scale-x-150 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    )}
+                    <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-transform duration-300 group-hover:scale-110 ${item.premium ? 'bg-brand text-black' : 'bg-brand/10 text-brand'}`}>
+                      {React.cloneElement(item.icon, { size: 12 })}
                     </div>
-                    <span className="relative text-[10px] font-bold text-black/70 dark:text-white/70 group-hover:text-black dark:text-white transition-colors uppercase tracking-widest" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
+                    <div className="flex flex-col">
+                      <span className={`relative text-[11px] font-black uppercase tracking-widest ${item.premium ? 'text-brand' : 'text-black/70 dark:text-white/70 group-hover:text-black dark:text-white'}`} style={{ fontFamily: FONTS.ui }}>{item.label}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Statements Section */}
-            <div className="space-y-2">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Financial Activity</h3>
-              <div className="grid grid-cols-1 gap-1.5">
-                {[
-                  { icon: <FaExchangeAlt />, label: "Transactions", action: handleTransactionClick },
-                  { icon: <FaHistory />, label: "Betting Profit & Loss", action: handleBettingTransaction },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="group flex items-center p-2 rounded-xl hover:bg-gray-100 dark:bg-white/5 transition-all duration-300 cursor-pointer border border-transparent hover:border-black/5 dark:border-white/5"
-                    onClick={item.action}
-                  >
-                    <div className="w-6 h-6 rounded-md bg-brand/5 flex items-center justify-center text-brand/70 mr-2.5 group-hover:bg-brand/20 group-hover:text-brand transition-all">
-                      {React.cloneElement(item.icon, { size: 10 })}
+            {/* Financial Activity Section */}
+            {isLoggedIn && (
+              <div className="space-y-2">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Financial Activity</h3>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {[
+                    { icon: <FaExchangeAlt />, label: "Transactions", action: handleTransactionClick },
+                    { icon: <FaHistory />, label: "Betting Profit & Loss", action: handleBettingTransaction },
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      className="group flex items-center p-2 rounded-xl bg-gray-100/50 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10"
+                      onClick={item.action}
+                    >
+                      <div className="w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center text-brand mr-2 transition-transform duration-300 group-hover:scale-110">
+                        {React.cloneElement(item.icon, { size: 10 })}
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-black/70 dark:text-white/70 group-hover:text-black dark:text-white" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
                     </div>
-                    <span className="text-[10px] font-bold text-black/60 dark:text-white/60 group-hover:text-black dark:text-white transition-colors uppercase tracking-widest" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Legal Section */}
+            {/* Legal & Compliance Section */}
             <div className="space-y-2">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Legal & Compliance</h3>
               <div className="grid grid-cols-1 gap-1.5">
@@ -530,70 +801,96 @@ function Navbar() {
                   { icon: <FaShieldAlt />, label: "Exclusion", action: handleExclusionPolicy },
                   { icon: <FaLock />, label: "Privacy", action: handlePrivacyPolicy },
                   { icon: <FaUserShield />, label: "Responsible", action: handleResponsibleGambling },
-                  { icon: <FaEnvelope />, label: "Contact", action: handleContactUs },
+                  { icon: <FaEnvelope />, label: "Support", action: handleSupport },
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="group flex items-center p-2 rounded-xl bg-gray-100 dark:bg-white/2 hover:bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer"
+                    className="group flex items-center p-2 rounded-xl bg-gray-100/50 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10"
                     onClick={item.action}
                   >
-                    <div className="w-6 h-6 rounded-md bg-brand/5 flex items-center justify-center text-brand/40 group-hover:text-brand mr-2.5 transition-colors">
+                    <div className="w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center text-brand mr-2 transition-transform duration-300 group-hover:scale-110">
                       {React.cloneElement(item.icon, { size: 10 })}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-black/40 dark:text-white/40 group-hover:text-black/80 dark:text-white/80 transition-colors" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-black/70 dark:text-white/70 group-hover:text-black dark:text-white" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Rewards & Social */}
+            {/* Rewards & Social Section */}
             <div className="space-y-2">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Connect & Win</h3>
               <div className="space-y-1.5">
                 {[
                   { icon: <FaGift />, label: "Gift Card", action: () => navigate("/gifrcardreedom"), highlight: true },
+                  ...(isWagering ? [{ icon: <FaClock />, label: "Wagering Progress", action: () => navigate("/active-bonus"), highlight: true, shimmer: true }] : []),
                   { icon: <FaStar />, label: "Promotions", action: handlePromotion },
+                  { icon: <FaGift />, label: "Bonuses", action: handleBonus },
                   { icon: <FaShareAlt />, label: "Refer And Earn", action: handleInviteAndEarn },
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className={`group flex items-center p-2 rounded-xl transition-all duration-300 cursor-pointer border ${item.highlight ? 'bg-brand/10 border-brand/20' : 'bg-gray-100 dark:bg-white/2 border-black/5 dark:border-white/5 hover:bg-gray-100 dark:bg-white/5'}`}
+                    className={item.highlight
+                      ? `group relative flex items-center p-2.5 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden border bg-gradient-to-r from-brand/20 to-brand/5 border-brand/30 shadow-lg`
+                      : `group flex items-center p-2 rounded-xl bg-gray-100/50 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10`}
                     onClick={item.action}
                   >
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center mr-2.5 ${item.highlight ? 'bg-brand text-black' : 'bg-gray-100 dark:bg-white/5 text-brand/70'}`}>
+                    <div className={`relative w-6 h-6 rounded-md flex items-center justify-center mr-2 transition-transform duration-300 group-hover:scale-110 ${item.highlight ? 'bg-brand text-black' : 'bg-brand/10 text-brand'}`}>
                       {React.cloneElement(item.icon, { size: 10 })}
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${item.highlight ? 'text-brand' : 'text-black/60 dark:text-white/60 group-hover:text-black dark:text-white'}`} style={{ fontFamily: FONTS.ui }}>{item.label}</span>
-                    {item.highlight && <div className="ml-auto w-1 h-1 rounded-full bg-brand animate-ping"></div>}
+                    <div className="flex flex-col">
+                      <span className={`relative text-[9px] font-black uppercase tracking-widest ${item.highlight ? 'text-brand' : 'text-black/70 dark:text-white/70 group-hover:text-black dark:text-white'}`} style={{ fontFamily: FONTS.ui }}>{item.label}</span>
+                    </div>
+                    {item.highlight && (
+                      <div className="ml-auto flex items-center gap-1">
+                        {item.shimmer && <span className="text-[7px] font-black opacity-40 mr-1" style={{ color: COLORS.text }}>{wagerPct}%</span>}
+                        <div className={`w-1 h-1 rounded-full bg-brand ${item.shimmer ? 'animate-ping' : ''}`}></div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Account Management */}
-            <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
-              <div
-                className="group flex items-center p-3 rounded-xl bg-gray-100 dark:bg-white/2 hover:bg-gray-100 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer"
-                onClick={handleChangePassword}
-              >
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 mr-3 group-hover:scale-110 transition-transform">
-                  <FaKey size={14} />
+            {/* Account Management Section */}
+            {isLoggedIn && (
+              <div className="space-y-4 pt-4 border-t border-black/5 dark:border-white/5">
+                <div
+                  className="group flex items-center p-2 rounded-xl bg-gray-100/50 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer"
+                  onClick={handleSupport}
+                >
+                  <div className="w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center text-brand mr-2.5 group-hover:scale-110 transition-transform">
+                    <FaTicketAlt size={10} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest leading-none mb-0.5" style={{ fontFamily: FONTS.ui }}>My Tickets</span>
+                    <span className="text-[7px] text-black/30 dark:text-white/30 uppercase tracking-tighter font-bold">View Support History</span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-black dark:text-white uppercase tracking-widest" style={{ fontFamily: FONTS.ui }}>Change Password</span>
-                  <span className="text-[7px] text-black/30 dark:text-white/30 uppercase tracking-tighter">Update Account Security</span>
-                </div>
-              </div>
 
-              <button
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all duration-500 border border-red-500/20 group overflow-hidden relative"
-                onClick={handleSignOut}
-              >
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100"></div>
-                <FaSignOutAlt size={12} className="group-hover:-translate-x-1 transition-transform" />
-                <span className="font-black uppercase tracking-[0.2em] text-[10px]" style={{ fontFamily: FONTS.head }}>Sign Out</span>
-              </button>
-            </div>
+                <div
+                  className="group flex items-center p-2 rounded-xl bg-gray-100/50 dark:bg-white/5 hover:bg-black/5 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer"
+                  onClick={handleChangePassword}
+                >
+                  <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center text-blue-400 mr-2.5 group-hover:scale-110 transition-transform">
+                    <FaKey size={10} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest leading-none mb-0.5" style={{ fontFamily: FONTS.ui }}>Change Password</span>
+                    <span className="text-[7px] text-black/30 dark:text-white/30 uppercase tracking-tighter font-bold">Update Account Security</span>
+                  </div>
+                </div>
+
+                <button
+                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white transition-all duration-500 border border-red-500/20 group overflow-hidden relative"
+                  onClick={handleSignOut}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100"></div>
+                  <FaSignOutAlt size={12} className="group-hover:-translate-x-1 transition-transform" />
+                  <span className="font-black uppercase tracking-[0.2em] text-[10px]" style={{ fontFamily: FONTS.head }}>Sign Out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -639,7 +936,7 @@ function Navbar() {
       </div>
       {/* Login Modal */}
       {showLogin && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
+        <div className="fixed inset-0 flex justify-center items-center z-[100000] bg-black/60 backdrop-blur-sm animate-fadeIn">
           <Login
             onClose={closeLoginModal}
             onSwitchToRegister={() => {
@@ -652,7 +949,7 @@ function Navbar() {
 
       {/* Register Modal */}
       {showRegister && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
+        <div className="fixed inset-0 flex justify-center items-center z-[100000] bg-black/60 backdrop-blur-sm animate-fadeIn">
           <Register
             onClose={closeRegisterModal}
             onSwitchToLogin={() => {
@@ -662,9 +959,37 @@ function Navbar() {
           />
         </div>
       )}
+
+      {/* App Install Modal */}
+      <AppInstallModal
+        isOpen={showAppInstallModal}
+        onClose={() => setShowAppInstallModal(false)}
+        isInstallable={isInstallable}
+        installApp={installApp}
+        isInstalled={isInstalled}
+        currentPlatform={currentDevice}
+        apkUrl={accountInfo?.service_apk_url}
+        accountInfo={accountInfo}
+      />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100001] animate-fadeIn">
+          <div
+            className={`px-5 py-3 rounded-xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 max-w-sm ${toast.type === "success"
+              ? "bg-green-500/90 border-green-400/30 text-white"
+              : "bg-red-500/90 border-red-400/30 text-white"
+              }`}
+            style={{ fontFamily: FONTS.ui }}
+          >
+            <span className="text-sm font-bold">{toast.type === "success" ? "✓" : "⚠"}</span>
+            <span className="text-xs font-medium">{toast.message}</span>
+            <button onClick={() => setToast(null)} className="ml-2 text-white/70 hover:text-white text-sm font-bold">✕</button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
 
 export default Navbar
-

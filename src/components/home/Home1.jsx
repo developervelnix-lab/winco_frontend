@@ -14,7 +14,7 @@ import Footer from './Footer';
 
 function Home1() {
   const [showToast, setShowToast] = useState(false);
-  const authSecretKey = sessionStorage.getItem('auth_secret_key');
+  const authSecretKey = localStorage.getItem('auth_secret_key');
 
   useEffect(() => {
     if (!authSecretKey) {

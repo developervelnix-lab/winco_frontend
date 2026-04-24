@@ -15,8 +15,8 @@ const FooterNav = () => {
   const COLORS = useColors();
   const navigate = useNavigate();
   const location = useLocation();
-  const authSecretKey = sessionStorage.getItem("auth_secret_key")
-  const userId = sessionStorage.getItem("account_id")
+  const authSecretKey = localStorage.getItem("auth_secret_key")
+  const userId = localStorage.getItem("account_id")
   
   const goToHome = () => {
     navigate("/");
@@ -91,10 +91,10 @@ const FooterNav = () => {
   };
 
   const navItems = [
-    { label: "Sport", icon: sportImage, active: false, action: () => scrollToSection("live") },
+    { label: "Sport", icon: sportImage, active: false, action: () => navigate("/?show_all=live") },
     { label: "E-Sport", icon: esport, active: false, action: handleESportClick },
     { label: "Home", icon: homeImage, isCenter: true, action: goToHome },
-    { label: "Casino", icon: cusinoImage, active: false, action: () => scrollToSection("slots-trending") },
+    { label: "Casino", icon: cusinoImage, active: false, action: () => navigate("/?show_all=casino") },
     { label: "Promo", icon: promotionImage, active: isActive("/promotion"), action: () => scrollToSection("promotions") },
   ];
 
@@ -151,4 +151,4 @@ const FooterNav = () => {
   );
 };
 
-export default FooterNav;
+export default FooterNav;
