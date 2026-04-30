@@ -60,8 +60,9 @@ const Login = ({ onSwitchToRegister, onClose }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_URL + "?Route=route-send-sms", {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
           Route: "route-send-sms",
@@ -127,8 +128,12 @@ const Login = ({ onSwitchToRegister, onClose }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const fetchUrl = `${API_URL}?Route=route-login&AuthToken=${encodeURIComponent(generateRandomToken(32))}&_t=${Date.now()}`;
+      console.log("🚀 [Login] Attempting login...", { method: loginMethod, url: fetchUrl });
+
+      const response = await fetch(fetchUrl, {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
           Route: "route-login",
@@ -138,11 +143,13 @@ const Login = ({ onSwitchToRegister, onClose }) => {
       });
 
       const result = await response.json();
+      console.log("✅ [Login] API Response:", result);
 
       if (result.status_code === "success") {
         localStorage.setItem("auth_secret_key", result.data[0].auth_secret_key);
         localStorage.setItem("account_id", result.data[0].account_id);
         
+        console.log("🔑 [Login] Session stored. Dispatching refresh...");
         // Trigger global data refresh for same-tab components
         window.dispatchEvent(new Event('site-data-refresh'));
         
@@ -156,9 +163,10 @@ const Login = ({ onSwitchToRegister, onClose }) => {
       } else if (result.status_code === "user_not_exist") {
         showToast("error", "Mobile/Username not found! Please register first.");
       } else {
-        showToast("error", "Login Failed. Please try again!");
+        showToast("error", result.message || "Login Failed. Please try again!");
       }
     } catch (error) {
+      console.error("❌ [Login] Request Error:", error);
       showToast("error", "Error during login. Please try again!");
     } finally {
       setIsLoading(false);

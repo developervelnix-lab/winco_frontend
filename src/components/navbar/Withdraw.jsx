@@ -23,12 +23,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { Toast } from "flowbite-react"
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaCoins, FaTableTennis, FaRegStar, FaStar as FaStarSolid, FaTrash } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import { useSite } from "../../context/SiteContext"
 import { useColors } from '../../hooks/useColors';
 import { FONTS, COLORS as THEME_COLORS } from '../../constants/theme';
-import { API_URL } from "../../utils/constants";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { apiGet, apiPost } from '@/utils/apiFetch';
 
 const Withdraw = () => {
   const COLORS = useColors();
@@ -40,7 +40,6 @@ const Withdraw = () => {
   const [showBankDropdown, setShowBankDropdown] = useState(false)
   const [accountBalance, setAccountBalance] = useState("0")
   const { accountInfo, logout } = useSite()
-  const authSecretKey = localStorage.getItem("auth_secret_key")
   const userId = localStorage.getItem("account_id")
   const [toasts, setToasts] = useState([])
   const [notification, setNotification] = useState({ isOpen: false, message: "", type: "" })
@@ -68,16 +67,9 @@ const Withdraw = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const fetchBankCards = async (userId) => {
+  const fetchBankCards = async () => {
     try {
-      const response = await fetch(`${API_URL}?USER_ID=${userId}&PAGE_NUM=1`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-get-bankcards",
-          AuthToken: authSecretKey,
-        },
-      })
+      const response = await apiGet("route-get-bankcards", { PAGE_NUM: 1 });
       const result = await response.json()
       if (result.status_code === "success") {
         setAddedBankAccounts(result.data)
@@ -89,14 +81,7 @@ const Withdraw = () => {
 
   const fetchBankList = async () => {
     try {
-      const response = await fetch(API_URL, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-get-banklist",
-          AuthToken: authSecretKey,
-        },
-      })
+      const response = await apiGet("route-get-banklist");
       const result = await response.json()
       setAvailableBanks(result.data.banklist)
     } catch (error) {
@@ -141,29 +126,19 @@ const Withdraw = () => {
       return;
     }
 
-    const params = new URLSearchParams({
-      USER_ID: userId,
-      BENEFICIARY_NAME: realName,
-      USER_BANK_NAME: selectedBank,
-      USER_BANK_ACCOUNT: cleanAcc,
-      USER_BANK_IFSC_CODE: cleanIFSC,
-      IS_PRIMARY: "true",
-      CARD_METHOD: "bank",
-    })
-
     try {
-      const response = await fetch(`${API_URL}?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          AuthToken: authSecretKey,
-          Route: "route-add-bankcard",
-        },
-      })
+      const response = await apiGet("route-add-bankcard", {
+        BENEFICIARY_NAME: realName,
+        USER_BANK_NAME: selectedBank,
+        USER_BANK_ACCOUNT: cleanAcc,
+        USER_BANK_IFSC_CODE: cleanIFSC,
+        IS_PRIMARY: "true",
+        CARD_METHOD: "bank",
+      });
       const result = await response.json()
       if (result.status_code === "success") {
         addToast("Bank added successfully", "success")
-        fetchBankCards(userId)
+        fetchBankCards()
         setShowAddBankPopup(false)
         setFormData({ realName: "", accountNumber: "", selectedBank: "", ifscCode: "" })
       } else if (result.status_code === "authorization_error" || result.status_code === "auth_error") {
@@ -180,17 +155,10 @@ const Withdraw = () => {
 
   const setPrimaryBankCard = async (cardId) => {
     try {
-      const response = await fetch(`${API_URL}?USER_ID=${userId}&CARD_ID=${cardId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-set-bankcard-primary",
-          AuthToken: authSecretKey,
-        },
-      })
+      const response = await apiGet("route-set-bankcard-primary", { CARD_ID: cardId });
       const result = await response.json()
       if (result.status_code === "success") {
-        fetchBankCards(userId)
+        fetchBankCards()
         setSelectedAccount(cardId)
         addToast("Primary account updated", "success")
       } else if (result.status_code === "authorization_error" || result.status_code === "auth_error") {
@@ -204,14 +172,7 @@ const Withdraw = () => {
   const deleteBankCard = async (cardId) => {
     if (!window.confirm("Are you sure you want to delete this bank account?")) return;
     try {
-      const response = await fetch(`${API_URL}?USER_ID=${userId}&CARD_ID=${cardId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-delete-bankcard",
-          AuthToken: authSecretKey,
-        },
-      })
+      const response = await apiGet("route-delete-bankcard", { CARD_ID: cardId });
       let result;
       const rawResponse = await response.text();
       try {
@@ -223,7 +184,7 @@ const Withdraw = () => {
 
       if (result.status_code === "success") {
         addToast("Account deleted successfully", "success")
-        fetchBankCards(userId)
+        fetchBankCards()
         if (selectedAccount === cardId) setSelectedAccount("")
       } else if (result.status_code === "authorization_error" || result.status_code === "auth_error") {
         logout()
@@ -236,19 +197,16 @@ const Withdraw = () => {
   }
 
   useEffect(() => {
-    fetchBankCards(userId)
+    fetchBankCards()
     fetchBankList()
     fetchWithdrawRecords()
-  }, [authSecretKey])
+  }, [])
 
   const fetchWithdrawRecords = async () => {
-    if (!authSecretKey || !userId) return
+    if (!userId) return
     setLoadingHistory(true)
     try {
-      const response = await fetch(`${API_URL}?USER_ID=${userId}&PAGE_NUM=1`, {
-        method: "GET",
-        headers: { Route: "route-withdraw-records", AuthToken: authSecretKey },
-      })
+      const response = await apiGet("route-withdraw-records", { PAGE_NUM: 1 });
       const result = await response.json()
       setWithdrawRecords(result.data || [])
     } catch (error) {
@@ -268,15 +226,7 @@ const Withdraw = () => {
     }
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Route: "route-withdraw-request",
-          AuthToken: authSecretKey,
-        },
-        body: JSON.stringify({ USER_ID: userId, WITHDRAW_AMOUNT: amount }),
-      })
+      const response = await apiPost("route-withdraw-request", { WITHDRAW_AMOUNT: amount });
       const result = await response.json()
       if (result.status_code === "success") {
         addToast(`Withdrawal of ₹${amount} initiated!`, "success")

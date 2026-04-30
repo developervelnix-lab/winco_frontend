@@ -1,7 +1,14 @@
 import React from 'react';
-import { Carousel } from 'flowbite-react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
 import { useColors } from '../../hooks/useColors';
 import { URL as BASE_URL } from "../../utils/constants"
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+import 'swiper/css/effect-fade';
 
 function FrontScrollableCard({ banners = [] }) {
   const COLORS = useColors();
@@ -11,29 +18,60 @@ function FrontScrollableCard({ banners = [] }) {
   }
 
   return (
-    <div className="w-full relative" style={{ backgroundColor: COLORS.bg }}>
-      <Carousel
-        className="h-[150px] sm:h-[200px] md:h-[280px] lg:h-[350px] xl:h-[410px]"
-        indicators={true}
-        leftControl={<span className="hidden group-hover:flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/10 dark:bg-black/60 text-black dark:text-white hover:bg-[#FFB000] hover:text-black transition-all duration-300 border border-black/10 dark:border-white/10 backdrop-blur-md text-lg md:text-2xl">←</span>}
-        rightControl={<span className="hidden group-hover:flex items-center justify-center w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/10 dark:bg-black/60 text-black dark:text-white hover:bg-[#FFB000] hover:text-black transition-all duration-300 border border-black/10 dark:border-white/10 backdrop-blur-md text-lg md:text-2xl">→</span>}
+    <div className="w-full relative group hero-swiper-container rounded-sm sm:rounded md:rounded-md overflow-hidden" style={{ backgroundColor: COLORS.bg }}>
+      <Swiper
+        spaceBetween={0}
+        centeredSlides={true}
+        loop={banners.length > 1}
+        speed={1500}
+        parallax={true}
+        watchSlidesProgress={true}
+        autoplay={{
+          delay: 4000,
+          disableOnInteraction: false,
+        }}
+        pagination={{
+          clickable: true,
+          dynamicBullets: true,
+        }}
+        modules={[Autoplay, Pagination, Navigation, EffectFade]}
+        className="h-[150px] sm:h-[200px] md:h-[280px] lg:h-[350px] xl:h-[410px] w-full"
       >
         {banners.map((slide, index) => (
-          <div key={index} className="relative w-full h-full overflow-hidden group">
-            <img
-              className="w-full h-full object-cover object-center scale-100 group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
-              src={slide.image_path?.startsWith('http') ? slide.image_path : `${BASE_URL}${encodeURI(slide.image_path)}`}
-              alt={`Banner ${index + 1}`}
-            />
-          </div>
+          <SwiperSlide key={index} className="overflow-hidden">
+            <div className="relative w-full h-full" data-swiper-parallax="20%">
+              <img
+                className="w-full h-full object-cover object-center transform transition-transform duration-[6000ms] hover:scale-105"
+                src={slide.image_path?.startsWith('http') ? slide.image_path : `${BASE_URL}${encodeURI(slide.image_path)}`}
+                alt={`Banner ${index + 1}`}
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+              {/* Premium Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+            </div>
+          </SwiperSlide>
         ))}
-      </Carousel>
+      </Swiper>
 
       <style dangerouslySetInnerHTML={{
         __html: `
-        /* Flowbite Carousel Customization */
-        .h-full > div {
-          background-color: transparent !important;
+        .hero-swiper-container .swiper-pagination-bullet {
+          background: #fff !important;
+          opacity: 0.3;
+          width: 8px;
+          height: 8px;
+          transition: all 0.3s ease;
+        }
+        .hero-swiper-container .swiper-pagination-bullet-active {
+          background: #FFB000 !important;
+          opacity: 1;
+          width: 24px !important;
+          border-radius: 4px !important;
+        }
+        .hero-swiper-container .swiper-button-disabled {
+          opacity: 0 !important;
+          pointer-events: none;
         }
       ` }} />
     </div>

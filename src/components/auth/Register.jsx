@@ -72,8 +72,9 @@ const Register = ({ onSwitchToLogin, onClose }) => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_URL + "?Route=route-send-sms", {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
           Route: "route-send-sms",
@@ -118,8 +119,12 @@ const Register = ({ onSwitchToLogin, onClose }) => {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const fetchUrl = `${API_URL}?Route=route-create-account&AuthToken=${encodeURIComponent(generateRandomToken(32))}&_t=${Date.now()}`;
+      console.log("🚀 [Register] Attempting registration...", { url: fetchUrl });
+
+      const response = await fetch(fetchUrl, {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
           Route: "route-create-account",
@@ -135,11 +140,13 @@ const Register = ({ onSwitchToLogin, onClose }) => {
       });
 
       const data = await response.json();
+      console.log("✅ [Register] API Response:", data);
 
       if (data.status_code === "success") {
         localStorage.setItem("auth_secret_key", data.data[0].auth_secret_key);
         localStorage.setItem("account_id", data.data[0].account_id);
         
+        console.log("🔑 [Register] Session stored. Dispatching refresh...");
         // Trigger global data refresh for same-tab components
         window.dispatchEvent(new Event('site-data-refresh'));
         
@@ -152,9 +159,10 @@ const Register = ({ onSwitchToLogin, onClose }) => {
       } else if (data.status_code === "username_exists") {
         showToast("error", "Username already exists! Please choose another.");
       } else {
-        showToast("error", "Registration failed! Please try again.");
+        showToast("error", data.message || "Registration failed! Please try again.");
       }
     } catch (error) {
+      console.error("❌ [Register] Request Error:", error);
       showToast("error", "Something went wrong! Please try again.");
     } finally {
       setIsLoading(false);

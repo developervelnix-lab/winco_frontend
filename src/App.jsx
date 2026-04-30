@@ -30,6 +30,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ThemeSynchronizer from './constants/ThemeSynchronizer';
 import { useEffect } from 'react';
 import { useSite, SiteProvider } from './context/SiteContext';
+import { GameProvider } from './context/GameContext';
 import { URL as BASE_URL } from './utils/constants';
 import BroadcastModal from './components/common/BroadcastModal';
 
@@ -257,9 +258,11 @@ const BrandManager = () => {
 function App() {
   return (
     <SiteProvider>
-      <BrandManager />
-      <ThemeSynchronizer />
-      <RouterProvider router={appRouter} />
+      <GameProvider>
+        <BrandManager />
+        <ThemeSynchronizer />
+        <RouterProvider router={appRouter} />
+      </GameProvider>
     </SiteProvider>
   );
 }

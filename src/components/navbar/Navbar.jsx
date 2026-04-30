@@ -9,8 +9,9 @@ import { useNavigate } from "react-router-dom"
 import AccountInfo from "./AccountInfo"
 import { allsport } from "../jsondata/sport"
 import { liveSport } from "../jsondata/live"
-import { FaSignInAlt, FaUserPlus, FaMoneyCheckAlt, FaWallet, FaHeadset, FaDownload, FaExchangeAlt, FaHistory, FaGavel, FaShieldAlt, FaLock, FaUserShield, FaGift, FaStar, FaShareAlt, FaKey, FaSignOutAlt, FaWhatsapp, FaTelegramPlane, FaInstagram, FaFacebookF, FaTwitter, FaBars, FaTimes, FaUserCircle, FaSun, FaMoon, FaEnvelope, FaTabletAlt, FaMobileAlt, FaArrowRight, FaClock, FaTrophy, FaGem, FaBell, FaTicketAlt } from "react-icons/fa"
+import { FaSignInAlt, FaUserPlus, FaMoneyCheckAlt, FaWallet, FaHeadset, FaDownload, FaExchangeAlt, FaHistory, FaGavel, FaShieldAlt, FaLock, FaUserShield, FaGift, FaStar, FaShareAlt, FaKey, FaSignOutAlt, FaWhatsapp, FaTelegramPlane, FaInstagram, FaFacebookF, FaTwitter, FaBars, FaTimes, FaUserCircle, FaSun, FaMoon, FaEnvelope, FaTabletAlt, FaMobileAlt, FaArrowRight, FaClock, FaTrophy, FaGem, FaBell, FaTicketAlt, FaSearch } from "react-icons/fa"
 import { useSite } from "../../context/SiteContext"
+import { useGames } from "../../context/GameContext"
 import { useColors } from '../../hooks/useColors';
 import { FONTS } from '../../constants/theme';
 import { useTheme } from "../../context/ThemeContext"
@@ -20,11 +21,14 @@ import AppInstallModal from "./AppInstallModal"
 
 function Navbar() {
   const { accountInfo, showLogin, setShowLogin, showRegister, setShowRegister, refreshSiteData } = useSite();
+  const { slots, casino, fishing, poker, turbo, live, casino_lobby, topslot } = useGames() || {};
   const isLoggedIn = !!(accountInfo?.account_id && localStorage.getItem("auth_secret_key"));
   const authSecretKey = localStorage.getItem("auth_secret_key");
   const userId = localStorage.getItem("account_id");
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [selectedGame, setSelectedGame] = useState(null)
   const [showAppInstallModal, setShowAppInstallModal] = useState(false)
   const navigate = useNavigate()
@@ -47,11 +51,13 @@ function Navbar() {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}?Route=route-trending-matches&AuthToken=${encodeURIComponent(authSecretKey || 'guest')}&_t=${Date.now()}`, {
           method: "GET",
+          mode: "cors",
+          cache: "no-store",
           headers: {
             "Content-Type": "application/json",
-            "route": "route-trending-matches",
+            "Route": "route-trending-matches",
             "AuthToken": authSecretKey || "guest"
           }
         });
@@ -135,11 +141,12 @@ function Navbar() {
 
     setSportsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}?Route=route-play-games&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}`, {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          route: "route-play-games",
+          Route: "route-play-games",
           AuthToken: authSecretKey,
         },
         body: JSON.stringify({
@@ -163,7 +170,8 @@ function Navbar() {
         showToast("error", "Minimum balance of ₹100 required to play sports.");
       } else if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
         showToast("error", "Session expired. Please login again.");
-        localStorage.clear();
+        localStorage.removeItem("auth_secret_key");
+        localStorage.removeItem("account_id");
         refreshSiteData();
         setShowLogin(true);
       } else if (data.status_code === "game_off") {
@@ -192,11 +200,12 @@ function Navbar() {
 
     setSportsLoading(true);
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}?Route=route-play-games&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}`, {
         method: "POST",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
-          route: "route-play-games",
+          Route: "route-play-games",
           AuthToken: authSecretKey,
         },
         body: JSON.stringify({
@@ -216,7 +225,8 @@ function Navbar() {
         showToast("error", "Minimum balance of ₹100 required to play sports.");
       } else if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
         showToast("error", "Session expired. Please login again.");
-        localStorage.clear();
+        localStorage.removeItem("auth_secret_key");
+        localStorage.removeItem("account_id");
         refreshSiteData();
         setShowLogin(true);
       } else {
@@ -228,6 +238,54 @@ function Navbar() {
       setSportsLoading(false);
     }
   };
+
+  const handleGameLaunch = async (game) => {
+    if (!authSecretKey) {
+      setSearchOpen(false);
+      setShowLogin(true);
+      return;
+    }
+    
+    setSearchOpen(false);
+    
+    try {
+      const response = await fetch(`${API_URL}?Route=route-play-games&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}`, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Route: "route-play-games",
+          AuthToken: authSecretKey,
+        },
+        body: JSON.stringify({
+          USER_ID: userId,
+          GAME_NAME: game["Game Name"],
+          GAME_UID: game["Game UID"],
+        }),
+      });
+
+      if (!response.ok) throw new Error("Network response was not ok");
+      const data = await response.json();
+
+      if (data.status_code === "success" && data.data?.game_url) {
+        const encodedUrl = btoa(unescape(encodeURIComponent(data.data.game_url)));
+        navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(game["Game Name"])}`);
+      } else if (data.status_code === "balance_error") {
+        showToast("error", "Insufficient balance to play this game.");
+      } else if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
+        showToast("error", "Session expired. Please login again.");
+        localStorage.removeItem("auth_secret_key");
+        localStorage.removeItem("account_id");
+        refreshSiteData();
+        setShowLogin(true);
+      } else {
+        showToast("error", data.status_code || "Failed to load game.");
+      }
+    } catch (error) {
+      showToast("error", "Network error. Please check your connection.");
+    }
+  };
+
   const handleLoginClick = () => {
     setShowLogin(true)
     setMenuOpen(false) // Close the sidebar if open
@@ -333,7 +391,8 @@ function Navbar() {
 
   function handleSignOut() {
     setMenuOpen(false)
-    localStorage.clear()
+    localStorage.removeItem("auth_secret_key")
+    localStorage.removeItem("account_id")
     refreshSiteData()
     navigate("/")
   }
@@ -421,7 +480,7 @@ function Navbar() {
             <nav className="main-nav">
               <button className="nav-link" onClick={() => scrollToSection("live")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Sports</button>
               <button className="nav-link nav-live" onClick={() => scrollToSection("live")} style={{ color: COLORS.red, fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}><span className="dot" style={{ backgroundColor: COLORS.red }}></span>Live</button>
-              <button className="nav-link" onClick={() => scrollToSection("casino")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Casino</button>
+              <button className="nav-link" onClick={() => scrollToSection("casino-lobby")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Casino</button>
               <button className="nav-link" onClick={() => scrollToSection("slots")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Slots</button>
               <button className="nav-link" onClick={() => scrollToSection("aviator")} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Aviator</button>
               <button className="nav-link" onClick={handlePromotion} style={{ fontFamily: FONTS.head, background: 'none', border: 'none', cursor: 'pointer' }}>Promotions</button>
@@ -439,6 +498,8 @@ function Navbar() {
                   <button className="btn-primary header-btn" onClick={() => navigate("/withdraw")} style={{ background: COLORS.brandGradient, color: '#000', fontFamily: FONTS.head }}>Withdraw</button>
                 </>
               )}
+
+
 
               {/* Wagering Progress Pill */}
               {isWagering && (
@@ -700,27 +761,7 @@ function Navbar() {
           )}
 
           <div className="space-y-6">
-            {/* Discovery Section */}
-            <div className="space-y-2 hidden">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 pl-2 mb-3" style={{ fontFamily: FONTS.head }}>Discover Lobby</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: <FaTrophy />, label: "Sports", action: () => { setMenuOpen(false); navigate('/?show_all=live'); } },
-                  { icon: <FaGem />, label: "Casino", action: () => { setMenuOpen(false); navigate('/?show_all=casino'); } },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className="group flex flex-col items-center justify-center p-3 rounded-2xl bg-gray-100/50 dark:bg-white/5 border border-black/5 dark:border-white/5 transition-all duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 text-center"
-                    onClick={item.action}
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-brand/10 flex items-center justify-center text-brand mb-2 transition-transform duration-300 group-hover:scale-110">
-                      {React.cloneElement(item.icon, { size: 14 })}
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-black/70 dark:text-white/70 group-hover:text-black dark:text-white" style={{ fontFamily: FONTS.ui }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+
 
             {/* Service Center Section */}
             <div className="space-y-2">
@@ -988,6 +1029,7 @@ function Navbar() {
           </div>
         </div>
       )}
+
     </>
   )
 }

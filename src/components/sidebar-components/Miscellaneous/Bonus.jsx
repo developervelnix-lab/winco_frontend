@@ -221,7 +221,13 @@ const Bonus = () => {
       );
     }
 
-    const visiblePromotions = promotions.filter(p => activeTab === 'all' || p.category === 'all' || p.category === activeTab);
+    const now = new Date();
+    const visiblePromotions = promotions.filter(p => {
+      const cat = (p.category || '').toLowerCase();
+      const isCorrectTab = activeTab === 'all' || cat === 'all' || cat === activeTab;
+      const isNotExpired = new Date(p.end_date) > now;
+      return isCorrectTab && isNotExpired;
+    });
 
     return (
       <>

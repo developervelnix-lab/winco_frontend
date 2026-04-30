@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { FaChevronLeft, FaChevronRight, FaEye, FaArrowLeft, FaPlay } from "react-icons/fa"
-import { turbogames } from "../jsondata/turbogames"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { API_URL } from "@/utils/constants"
+import { apiPost } from "@/utils/apiFetch"
 import { useColors } from '../../hooks/useColors';
 import { FONTS } from '../../constants/theme';
 import { useSite } from "../../context/SiteContext"
+import { useGames } from "../../context/GameContext"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Navigation } from "swiper/modules"
 import "swiper/css"
@@ -16,11 +16,11 @@ import "swiper/css/navigation"
 
 const GameSection = ({ title, games }) => {
   const COLORS = useColors();
-  const { setShowLogin } = useSite();
+  const { setShowLogin, refreshSiteData } = useSite();
   const [preloadedImages, setPreloadedImages] = useState([])
   const [loadingForGames, setLoadingForGames] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
-  const [confirmPopup, setConfirmPopup] = useState({ show: false, game: null })
+  const [confirmPopup, setConfirmPopup] = useState({ show: false, game: null, error: null })
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [hoveredGame, setHoveredGame] = useState(null)
@@ -105,31 +105,19 @@ const GameSection = ({ title, games }) => {
       setShowLogin(true);
       return;
     }
-    setConfirmPopup({ show: true, game })
+    setConfirmPopup({ show: true, game, error: null })
   }
 
   const confirmGameOpen = async () => {
-    const authSecretKey = localStorage.getItem("auth_secret_key")
-    const userId = localStorage.getItem("account_id")
-
     const game = confirmPopup.game
     setLoadingForGames(game["Game UID"])
     setConfirmLoading(true)
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          route: "route-play-games",
-          AuthToken: authSecretKey,
-        },
-        body: JSON.stringify({
-          USER_ID: userId,
-          GAME_NAME: game["Game Name"],
-          GAME_UID: game["Game UID"],
-        }),
-      })
+      const response = await apiPost("route-play-games", {
+        GAME_NAME: game["Game Name"],
+        GAME_UID: game["Game UID"],
+      });
 
       if (!response.ok) {
         throw new Error("Network response was not ok")
@@ -141,7 +129,7 @@ const GameSection = ({ title, games }) => {
         closePopup()
       }
 
-      if (data.status_code === "authorization_error") {
+      if (data.status_code === "authorization_error" || data.status_code === "auth_error") {
         setConfirmPopup({
           show: true,
           game: game,
@@ -156,7 +144,8 @@ const GameSection = ({ title, games }) => {
         })
       } else if (data.data?.game_url) {
         setTimeout(() => {
-          navigate(`/game-url/${encodeURIComponent(data.data.game_url)}/${encodeURIComponent(game["Game Name"])}`)
+          const encodedUrl = btoa(unescape(encodeURIComponent(data.data.game_url)));
+          navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(game["Game Name"])}`)
         }, 500)
       }
     } catch (error) {
@@ -172,6 +161,15 @@ const GameSection = ({ title, games }) => {
         setConfirmLoading(false)
       }, 500)
     }
+  }
+
+  function handleAuthError() {
+    setConfirmPopup({ show: false, game: null, error: null });
+    localStorage.removeItem("auth_secret_key");
+    localStorage.removeItem("account_id");
+    refreshSiteData();
+    navigate("/");
+    setShowLogin(true);
   }
 
   return (
@@ -304,22 +302,23 @@ const GameSection = ({ title, games }) => {
                   <div className="flex items-center gap-6">
                     <button
                       onClick={closePopup}
-                      className="bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-2xl p-3.5 transition-all duration-300 border border-black/10 dark:border-white/10 shadow-lg active:scale-95 group"
+                      className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl px-4 py-2 transition-all duration-300 border border-black/10 dark:border-white/10 shadow-lg active:scale-95 group"
                       aria-label="Go Back"
                     >
-                      <FaArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                      <FaArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                      <span className="text-[10px] font-black uppercase tracking-widest" style={{ fontFamily: FONTS.ui }}>Back</span>
                     </button>
-                    <div className="h-10 w-1 rounded-full opacity-80" style={{ background: COLORS.brandGradient }}></div>
+                    <div className="h-8 w-1 rounded-full opacity-80" style={{ background: COLORS.brandGradient }}></div>
                     <div>
                       <h2
-                        className="text-2xl font-black text-black dark:text-white tracking-[0.15em] uppercase"
+                        className="text-lg md:text-xl font-black text-black dark:text-white tracking-[0.1em] uppercase leading-tight"
                         style={{ fontFamily: FONTS.head }}
                       >
                         {title}
                       </h2>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
-                        <span className="text-[10px] text-black/40 dark:text-white/40 font-bold uppercase tracking-[0.2em]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
+                        <span className="text-[8px] md:text-[9px] text-black/40 dark:text-white/40 font-bold uppercase tracking-[0.2em]">
                           Premium Collection
                         </span>
                       </div>
@@ -429,7 +428,7 @@ const GameSection = ({ title, games }) => {
                     className="text-xl font-black text-black dark:text-white tracking-tight uppercase"
                     style={{ fontFamily: FONTS.head }}
                   >
-                    Ready to Win?
+                    READY TO WIN?
                   </h3>
                   <p className="text-black/60 dark:text-white/60 text-sm leading-relaxed px-2">
                     You are about to enter <span className="text-black dark:text-white font-bold">{confirmPopup.game?.["Game Name"]}</span>. Good luck!
@@ -441,12 +440,7 @@ const GameSection = ({ title, games }) => {
             <div className="flex flex-col gap-3 mt-8">
               {confirmPopup.error === "authorization_error" ? (
                 <button
-                  onClick={() => {
-                    localStorage.clear();
-                    window.dispatchEvent(new Event('site-data-refresh'));
-                    navigate("/");
-                    window.location.reload();
-                  }}
+                  onClick={handleAuthError}
                   className="w-full px-6 py-4 rounded-2xl font-bold uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-95 group overflow-hidden relative text-black dark:text-white"
                   style={{ background: COLORS.brandGradient, fontFamily: FONTS.ui }}
                 >
@@ -594,9 +588,11 @@ const GameSection = ({ title, games }) => {
 }
 
 const Turbogames = () => {
+  const { turbo } = useGames();
   return (
-    <div className="games-display space-y-6">
-      <GameSection title="🚀 Turbo Games" games={turbogames} />
+    <div className="games-display space-y-3 mt-3">
+      {" "}
+      <GameSection title="🚀 Turbo Games" games={turbo} />
     </div>
   )
 }

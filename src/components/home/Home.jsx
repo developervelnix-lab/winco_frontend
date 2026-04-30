@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { FaEye, FaArrowLeft } from "react-icons/fa"
 import FrontScrollableCard from "./FrontScrollableCard"
 import Navbar from "../navbar/Navbar"
 import TrendingSlot from "./TrendingSlot"
@@ -9,20 +10,25 @@ import GameProvider from "./GameProvider"
 import Faq from "./Faq"
 import MobileFooterNav from "../navbar/MobileFooterNav"
 import Live from "./Live"
+import CasinoLobby from "./CasinoLobby"
 import Turbogames from "./Turbogames"
 import FeaturesSection from "./FeaturesSection"
 import PromotionSection from "./PromotionSection"
 import NewsTicker from "./NewsTicker"
 import Footer from "./Footer"
+import HomeSearch from "./HomeSearch"
 import { useColors } from '../../hooks/useColors'
+import { FONTS } from '../../constants/theme'
 import { useSite } from "../../context/SiteContext"
 import { URL as BASE_URL } from "../../utils/constants"
 
 function Home() {
   const COLORS = useColors()
   const { accountInfo, promoBanners, heroBanners, loading } = useSite()
+
   const [showToast, setShowToast] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -83,7 +89,32 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    if (window.location.hash) {
+    // 1. Initial Trap: Push a hidden state into history without changing the visible URL
+    if (!window.history.state || !window.history.state.isHome) {
+      window.history.replaceState({ isHome: true, isAtTop: true }, "");
+      // Push a second state so that clicking 'Back' has something to return to
+      window.history.pushState({ isHome: true, isAtTop: false }, "");
+    }
+
+    const handlePopState = (event) => {
+      // 2. Check if we returned to our 'isAtTop' state
+      if (event.state && event.state.isAtTop) {
+        if (window.scrollY > 300) {
+          // 3. Scroll to top smoothly
+          window.scrollTo({ top: 0, behavior: "smooth" });
+
+          // 4. RE-TRAP: Put the 'scrolled down' state back so the NEXT back click exits
+          window.history.pushState({ isHome: true, isAtTop: false }, "");
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash && window.location.hash !== "#top") {
       const id = window.location.hash.substring(1)
       const element = document.getElementById(id)
       if (element) {
@@ -101,31 +132,58 @@ function Home() {
 
       <main className="flex-grow" style={{ backgroundColor: COLORS.bg }}>
         <Navbar externalAccountInfo={accountInfo} />
+
+        {/* HERO BANNER SECTION */}
         <div className="px-0 md:px-0">
           <FrontScrollableCard banners={heroBanners} />
         </div>
+
         <NewsTicker />
-        <div className="px-4 md:px-8 mt-0.5 md:mt-1">
-          <div className="mb-3 md:mb-4" id="trending-slots">
-            <TrendingSlot />
+
+        <div className="px-4 md:px-8 mt-2 md:mt-4">
+          {/* BRANDING BANNER & SEARCH */}
+          <div className="mb-3 md:mb-4 relative flex items-center" id="trending-slots">
+            <div className="w-full">
+              <TrendingSlot />
+            </div>
+            <div className="absolute right-4 md:right-8 z-[60]">
+              <HomeSearch />
+            </div>
           </div>
+
+          {/* DYNAMIC GAME SECTIONS */}
           <div className="mb-3 md:mb-4">
             <Live />
+          </div>
+          <div className="mb-3 md:mb-4" id="casino-lobby">
+            <CasinoLobby />
+          </div>
+          <div className="mb-3 md:mb-4">
+            <GamesDisplay section="trending-games" />
+          </div>
+          <div className="mb-3 md:mb-4">
+            <GamesDisplay section="slots" />
           </div>
           <div className="mb-3 md:mb-4" id="aviator">
             <Turbogames />
           </div>
           <div className="mb-3 md:mb-4">
-            <GamesDisplay />
+            <GamesDisplay section="poker" />
+          </div>
+          <div className="mb-3 md:mb-4">
+            <GamesDisplay section="fishing" />
           </div>
           <div className="mb-3 md:mb-4" id="promotions">
             <PromotionSection banners={promoBanners} />
           </div>
-          <div className="mb-4 md:mb-6">
-            <GameProvider />
-          </div>
+
+        </div>
+
+        <div className="mb-4 md:mb-6">
+          <GameProvider />
         </div>
       </main>
+
       <div className="px-4 md:px-8 mb-4 md:mb-6">
         <FeaturesSection />
       </div>
@@ -136,35 +194,24 @@ function Home() {
       <footer className="md:hidden fixed bottom-0 left-0 right-0 z-50">
         <MobileFooterNav />
       </footer>
-    </div>
-  )
-}
 
-function LogoLoader() {
-  const COLORS = useColors()
-  const { accountInfo } = useSite()
-  const logoUrl = accountInfo?.service_site_logo
-    ? `${BASE_URL}${encodeURI(accountInfo.service_site_logo)}`
-    : "";
+      <style>{`
+        .skeleton-shimmer {
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: COLORS.bg }}>
-      <div className="flex flex-col items-center">
-        <div className="relative mb-6">
-          <div className="relative w-16 h-16 flex items-center justify-center">
-            {logoUrl && <img src={logoUrl} alt="Loading" className="w-8 h-8 object-contain" />}
-            <div className="absolute inset-0 border-[3px] rounded-full animate-spin" style={{ borderColor: `${COLORS.brand}33`, borderTopColor: COLORS.brand }}></div>
-          </div>
-        </div>
-        <div className="text-center space-y-1">
-          <div className="text-2xl md:text-3xl font-black text-black dark:text-white uppercase tracking-[0.1em] hero-text-main">
-            {accountInfo?.service_site_name || "Site"}
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: `${COLORS.brand}99` }}>
-            PREMIER BETTING EXPERIENCE
-          </div>
-        </div>
-      </div>
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   )
 }

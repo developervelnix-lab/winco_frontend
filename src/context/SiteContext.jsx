@@ -4,17 +4,57 @@ import { API_URL } from '@/utils/constants';
 const SiteContext = createContext();
 
 export const SiteProvider = ({ children }) => {
+  // 1. Get initial auth tokens from storage immediately
+  const initialUserId = (typeof window !== 'undefined' && localStorage.getItem("account_id")) || "guest";
+  const initialAuthToken = (typeof window !== 'undefined' && localStorage.getItem("auth_secret_key")) || "guest";
+
+  // 2. Build initial state from defaults + local session + cached data
   const INITIAL_ACCOUNT_INFO = {
     service_site_name: "Winco",
     service_site_logo: "/wincologo.png",
     service_tagline: "PLAY · WIN · REPEAT",
+    service_marquee: "Welcome to Winco! Experience world-class betting and gaming. Sign up now to get exclusive bonuses and daily rewards. Minimum deposit ₹100. Fast 24/7 withdrawals.",
     service_app_download_url: "https://winco.cc/Winco.apk",
-    service_support_url: "https://t.me/winco_support"
+    service_support_url: "https://t.me/winco_support",
+    account_id: initialUserId !== "guest" ? initialUserId : "guest",
+    account_username: initialUserId !== "guest" ? "User" : "Guest",
+    account_balance: initialUserId !== "guest" ? "0.00" : "0.00",
   };
 
-  const [accountInfo, setAccountInfo] = useState(INITIAL_ACCOUNT_INFO);
-  const [promoBanners, setPromoBanners] = useState([]);
-  const [heroBanners, setHeroBanners] = useState([]);
+  const DEFAULT_HERO_BANNERS = [
+    { image_path: "https://images.unsplash.com/photo-1518173946687-a4c8a9833d8e?q=80&w=2000&auto=format&fit=crop", action_url: "#" },
+    { image_path: "https://images.unsplash.com/photo-1540747737273-4629e0756eb9?q=80&w=2000&auto=format&fit=crop", action_url: "#" }
+  ];
+
+  const DEFAULT_PROMO_BANNERS = [
+    { image_path: "https://images.unsplash.com/photo-1540747737273-4629e0756eb9?q=80&w=2000&auto=format&fit=crop", action_url: "#" }
+  ];
+
+  // Try to load from cache on initialization to prevent flicker
+  const [accountInfo, setAccountInfo] = useState(() => {
+    const cached = typeof window !== 'undefined' ? localStorage.getItem("cached_site_info") : null;
+    if (cached) {
+      try { return { ...INITIAL_ACCOUNT_INFO, ...JSON.parse(cached) }; } catch (e) { return INITIAL_ACCOUNT_INFO; }
+    }
+    return INITIAL_ACCOUNT_INFO;
+  });
+
+  const [promoBanners, setPromoBanners] = useState(() => {
+    const cached = typeof window !== 'undefined' ? localStorage.getItem("cached_promo_banners") : null;
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) { return DEFAULT_PROMO_BANNERS; }
+    }
+    return DEFAULT_PROMO_BANNERS;
+  });
+
+  const [heroBanners, setHeroBanners] = useState(() => {
+    const cached = typeof window !== 'undefined' ? localStorage.getItem("cached_hero_banners") : null;
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) { return DEFAULT_HERO_BANNERS; }
+    }
+    return DEFAULT_HERO_BANNERS;
+  });
+
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [notice, setNotice] = useState(null);
@@ -22,10 +62,11 @@ export const SiteProvider = ({ children }) => {
 
   const logout = () => {
     console.warn("Logging out user...");
-    localStorage.clear();
+    localStorage.removeItem("auth_secret_key");
+    localStorage.removeItem("account_id");
+    localStorage.removeItem("cached_site_info"); // Clear cached sensitive info
     setAccountInfo(INITIAL_ACCOUNT_INFO);
     setShowLogin(true);
-    // Force a reload if necessary, but state update should trigger re-renders
     window.dispatchEvent(new Event('site-data-refresh'));
   };
 
@@ -33,15 +74,17 @@ export const SiteProvider = ({ children }) => {
     const userId = localStorage.getItem("account_id") || "guest";
     const authSecretKey = localStorage.getItem("auth_secret_key") || "guest";
     
-    // If one is present but other is missing, clean up
     if (userId !== "guest" && authSecretKey === "guest") {
       logout();
       return;
     }
 
     try {
-      const response = await fetch(API_URL + "?USER_ID=" + userId + "&_t=" + Date.now(), {
+      const fetchUrl = `${API_URL}?Route=route-account-info&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}&_t=${Date.now()}`;
+      
+      const response = await fetch(fetchUrl, {
         method: "GET",
+        mode: "cors",
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
@@ -51,63 +94,72 @@ export const SiteProvider = ({ children }) => {
       });
 
       const result = await response.json();
-      if (result.status_code === "success") {
-        if (result.data && result.data[0]) {
-          setAccountInfo(result.data[0]);
+
+      if (result.status_code === "success" && result.data && result.data[0]) {
+        const serverData = result.data[0];
+        const isLoggedIn = userId !== "guest" && authSecretKey !== "guest";
+        const serverReturnedGuest = !serverData.account_balance || 
+          (serverData.account_username === "Guest" && parseFloat(serverData.account_balance) === 0);
+        
+        setAccountInfo(prev => {
+          const cleanServerData = {};
+          Object.keys(serverData).forEach(key => {
+            // Allow empty strings for branding fields to enable clearing them via backend
+            if (serverData[key] !== null && serverData[key] !== undefined) {
+              cleanServerData[key] = serverData[key];
+            }
+          });
+
+          const mergedInfo = { ...prev, ...cleanServerData };
+          
+          let finalInfo = mergedInfo;
+          if (isLoggedIn && serverReturnedGuest) {
+            finalInfo = {
+              ...mergedInfo,
+              account_id: prev.account_id || userId,
+              account_username: (prev.account_username && prev.account_username !== "Guest") ? prev.account_username : "User",
+              account_balance: prev.account_balance || "0.00",
+            };
+          }
+          
+          localStorage.setItem("cached_site_info", JSON.stringify(finalInfo));
+          return finalInfo;
+        });
+
+        // Normalize and Update Banners with Caching
+        if (result.promo_banners && result.promo_banners.length > 0) {
+          const normalizedPromo = result.promo_banners.map(banner => ({
+            image_path: banner.image_path || banner.image || banner.promo_img,
+            action_url: banner.action_url || banner.action || banner.promo_action
+          }));
+          setPromoBanners(normalizedPromo);
+          localStorage.setItem("cached_promo_banners", JSON.stringify(normalizedPromo));
         }
         
-        // Handle System Notices / Popups
+        const rawHero = result.hero_banners || result.slideShowList;
+        if (rawHero && rawHero.length > 0) {
+          const normalizedHero = rawHero.map(banner => ({
+            image_path: banner.image_path || banner.slider_img || banner.tbl_slider_img || banner.image,
+            action_url: banner.action_url || banner.slider_action || banner.tbl_slider_action || banner.action
+          }));
+          setHeroBanners(normalizedHero);
+          localStorage.setItem("cached_hero_banners", JSON.stringify(normalizedHero));
+        }
+
+        // Handle System Notices
         if (result.noticeArr && result.noticeArr.length >= 2) {
           const nTitle = result.noticeArr[0];
           const nMsg = result.noticeArr[1];
           const nHash = btoa(nTitle + nMsg).substring(0, 32); 
-          
           const acknowledgedNotices = JSON.parse(localStorage.getItem("acknowledged_notices") || "[]");
           const shownToasts = JSON.parse(localStorage.getItem("shown_toasts") || "[]");
-          const allNotifications = JSON.parse(localStorage.getItem("notifications_history") || "[]");
-
-          // Add to history if new
-          const isExisting = allNotifications.some(n => n.id === nHash);
-          if (!isExisting) {
-            allNotifications.unshift({ id: nHash, title: nTitle, message: nMsg, time: new Date().toISOString() });
-            localStorage.setItem("notifications_history", JSON.stringify(allNotifications.slice(0, 50))); 
-          }
-
-          // Only show toast if not acknowledged AND not already shown as a toast in this session/state
           if (!acknowledgedNotices.includes(nHash) && !shownToasts.includes(nHash)) {
-            setNotice({ 
-              id: nHash,
-              title: nTitle, 
-              message: nMsg 
-            });
+            setNotice({ id: nHash, title: nTitle, message: nMsg });
           }
-        }
-        
-        // Normalize Promo Banners
-        const rawPromo = result.promo_banners || [];
-        const normalizedPromo = rawPromo.map(banner => ({
-          image_path: banner.image_path || banner.image || banner.promo_img,
-          action_url: banner.action_url || banner.action || banner.promo_action
-        }));
-        setPromoBanners(normalizedPromo);
-        
-        // Normalize Hero Banners
-        const rawHero = result.hero_banners || result.slideShowList || [];
-        const normalizedHero = rawHero.map(banner => ({
-          image_path: banner.image_path || banner.slider_img || banner.tbl_slider_img || banner.image,
-          action_url: banner.action_url || banner.slider_action || banner.tbl_slider_action || banner.action
-        }));
-        setHeroBanners(normalizedHero);
-      } else {
-        // If server returns ANYTHING other than "success" for a logged-in user, clear session
-        if (userId !== "guest") {
-          console.warn("Server side auth rejection or error, logging out");
-          logout();
         }
       }
     } catch (error) {
-      console.error("Error fetching site data:", error);
-      // Optional: don't logout on network error, only on explicit server rejection
+      console.error("❌ [SiteContext] API Fetch Failed:", error);
     } finally {
       setLoading(false);
     }
@@ -116,19 +168,16 @@ export const SiteProvider = ({ children }) => {
   useEffect(() => {
     fetchSiteData();
 
-    // Periodic check every 5 seconds to ensure session is still valid
     const interval = setInterval(() => {
       fetchSiteData();
     }, 5000);
     
-    // Listen for login/logout to refresh data (cross-tab)
     const handleStorageChange = (e) => {
       if (e.key === "auth_secret_key" || e.key === "account_id") {
         fetchSiteData();
       }
     };
 
-    // Listen for custom refresh events (same-tab)
     const handleCustomRefresh = () => {
       fetchSiteData();
     };

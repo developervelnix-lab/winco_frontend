@@ -94,7 +94,7 @@ const FooterNav = () => {
     { label: "Sport", icon: sportImage, active: false, action: () => navigate("/?show_all=live") },
     { label: "E-Sport", icon: esport, active: false, action: handleESportClick },
     { label: "Home", icon: homeImage, isCenter: true, action: goToHome },
-    { label: "Casino", icon: cusinoImage, active: false, action: () => navigate("/?show_all=casino") },
+    { label: "Casino", icon: cusinoImage, active: false, action: () => scrollToSection("casino-lobby") },
     { label: "Promo", icon: promotionImage, active: isActive("/promotion"), action: () => scrollToSection("promotions") },
   ];
 

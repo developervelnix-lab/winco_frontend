@@ -130,7 +130,10 @@ const Promotion = () => {
       );
     }
 
-    const visiblePromotions = promotions.filter(p => activeTab === 'all' || p.category === 'all' || p.category === activeTab);
+    const visiblePromotions = promotions.filter(p => {
+      const cat = (p.category || '').toLowerCase();
+      return activeTab === 'all' || cat === 'all' || cat === activeTab;
+    });
 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 px-2">

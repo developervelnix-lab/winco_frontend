@@ -105,10 +105,12 @@
                 })()}
               </div>
 
-              {/* Address - Now correctly placed under Winco social links */}
-              <p className="text-[10px] text-black/60 dark:text-white/60 font-medium max-w-sm text-left leading-relaxed">
-                📍 33 rd floor, business bay Dubai, UAE
-              </p>
+              {/* Address - Now dynamically linked to backend SITE_ADDRESS */}
+              {accountInfo?.service_address && (
+                <p className="text-[10px] text-black/60 dark:text-white/60 font-medium max-w-sm text-left leading-relaxed">
+                  📍 {accountInfo.service_address}
+                </p>
+              )}
             </div>
 
             {/* Section 2: Quick Links */}

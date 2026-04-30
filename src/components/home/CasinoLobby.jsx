@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { Swiper, SwiperSlide } from "swiper/react"
-import { Navigation } from "swiper/modules"
-import "swiper/css"
-import "swiper/css/navigation"
 import { FaChevronLeft, FaChevronRight, FaEye, FaArrowLeft, FaPlay } from "react-icons/fa"
-import { apiPost } from "@/utils/apiFetch"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { apiPost } from "@/utils/apiFetch"
 import { useColors } from '../../hooks/useColors'
 import { FONTS } from '../../constants/theme'
 import { useSite } from "../../context/SiteContext"
 import { useGames } from "../../context/GameContext"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Navigation } from "swiper/modules"
+import "swiper/css"
+import "swiper/css/navigation"
 
 const GameSection = ({ title, games, id }) => {
   const COLORS = useColors()
@@ -150,7 +150,7 @@ const GameSection = ({ title, games, id }) => {
         })
       } else if (data.data?.game_url) {
         setTimeout(() => {
-          // Base64 encode the URL to prevent issues with slashes and special characters in the route
+          // Base64 encode the URL
           const encodedUrl = btoa(unescape(encodeURIComponent(data.data.game_url)));
           navigate(`/game-url/${encodeURIComponent(encodedUrl)}/${encodeURIComponent(game["Game Name"])}`)
         }, 500)
@@ -195,7 +195,7 @@ const GameSection = ({ title, games, id }) => {
 
       <div className="flex justify-between items-center mb-4 md:mb-6 gap-2">
         <div className="flex items-center gap-2 md:gap-4 min-w-0">
-          <div 
+          <div
             className="h-3 md:h-5 w-1 rounded-full flex-shrink-0"
             style={{ background: COLORS.brandGradient }}
           ></div>
@@ -206,6 +206,7 @@ const GameSection = ({ title, games, id }) => {
             {title}
           </h2>
         </div>
+
         <div className="flex items-center space-x-3">
           <div className="hidden md:flex items-center bg-gray-100 dark:bg-white/5 rounded-full p-1 backdrop-blur-sm border border-black/10 dark:border-white/10">
             <button
@@ -270,7 +271,7 @@ const GameSection = ({ title, games, id }) => {
                   onClick={() => handleGameClick(game)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 sm:p-3 pointer-events-none">
-                  <span className="text-black dark:text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate w-full" style={{ fontFamily: FONTS.ui }}>
+                  <span className="text-black dark:text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate w-full" style={{ fontFamily: FONTS.head }}>
                     {game["Game Name"]}
                   </span>
                 </div>
@@ -291,23 +292,22 @@ const GameSection = ({ title, games, id }) => {
         ))}
       </Swiper>
 
-      {showPopup &&
-        createPortal(
-          <div className="fixed inset-0 bg-black z-[99999] overflow-y-auto animate-fadeIn flex flex-col">
-            <div
-              className="fixed inset-0 pointer-events-none opacity-40"
-              style={{
-                backgroundImage: `radial-gradient(circle at 50% -20%, ${COLORS.brand}44, transparent 70%), radial-gradient(circle at 0% 100%, ${COLORS.brand}22, transparent 50%), radial-gradient(circle at 100% 100%, ${COLORS.brand}22, transparent 50%)`,
-              }}
-            ></div>
+      {showPopup && createPortal(
+        <div className="fixed inset-0 bg-black z-[99999] overflow-y-auto animate-fadeIn flex flex-col">
+          <div
+            className="fixed inset-0 pointer-events-none opacity-40"
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% -20%, ${COLORS.brand}44, transparent 70%), radial-gradient(circle at 0% 100%, ${COLORS.brand}22, transparent 50%), radial-gradient(circle at 100% 100%, ${COLORS.brand}22, transparent 50%)`,
+            }}
+          ></div>
 
-            <div className="relative flex flex-col min-h-full backdrop-blur-[50px]">
-              <div
-                className="sticky top-0 z-[100] w-full border-b border-black/5 dark:border-white/5 shadow-2xl"
-                style={{ backgroundColor: `${COLORS.bg2}A0` }}
-              >
-                <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between backdrop-blur-md">
-                  <div className="flex items-center gap-6">
+          <div className="relative flex flex-col min-h-full backdrop-blur-[50px]">
+            <div
+              className="sticky top-0 z-[100] w-full border-b border-black/5 dark:border-white/5 shadow-2xl"
+              style={{ backgroundColor: `${COLORS.bg2}A0` }}
+            >
+              <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between backdrop-blur-md">
+                <div className="flex items-center gap-6">
                     <button
                       onClick={closePopup}
                       className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl px-4 py-2 transition-all duration-300 border border-black/10 dark:border-white/10 shadow-lg active:scale-95 group"
@@ -331,61 +331,58 @@ const GameSection = ({ title, games, id }) => {
                         </span>
                       </div>
                     </div>
-                  </div>
-
-
                 </div>
               </div>
+            </div>
 
-              <div className="flex-1 w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6">
-                <div className="see-all-grid gap-3 md:gap-6 animate-fadeInUp">
-                  {games.map((game, index) => (
-                    <div key={index} className="flex flex-col group cursor-pointer" onClick={() => handleGameClick(game)}>
-                      <div className="relative aspect-[4/5] rounded-xl overflow-hidden p-[1px] bg-gradient-to-br from-white/10 via-transparent to-white/5 transition-all duration-500 group-hover:from-brand/50 group-hover:to-brand/20 group-hover:shadow-[0_0_30px_rgba(230,160,0,0.4)] group-hover:-translate-y-1">
-                        <div className="relative w-full h-full rounded-[11px] overflow-hidden bg-gray-100 dark:bg-white/5">
-                          <img
-                            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
-                              loadingForGames === game["Game UID"] ? "opacity-30 blur-sm" : ""
+            <div className="flex-1 w-full max-w-[1920px] mx-auto px-4 md:px-6 py-6">
+              <div className="see-all-grid gap-3 md:gap-6 animate-fadeInUp">
+                {games?.map((game, index) => (
+                  <div key={index} className="flex flex-col group cursor-pointer" onClick={() => handleGameClick(game)}>
+                    <div className="relative aspect-[4/5] rounded-xl overflow-hidden p-[1px] bg-gradient-to-br from-white/10 via-transparent to-white/5 transition-all duration-500 group-hover:from-brand/50 group-hover:to-brand/20 group-hover:shadow-[0_0_30px_rgba(230,160,0,0.4)] group-hover:-translate-y-1">
+                      <div className="relative w-full h-full rounded-[11px] overflow-hidden bg-gray-100 dark:bg-white/5">
+                        <img
+                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${loadingForGames === game["Game UID"] ? "opacity-30 blur-sm" : ""
                             }`}
-                            src={game.icon || "/placeholder.svg"}
-                            alt={game["Game Name"]}
-                          />
+                          src={game.icon || "/placeholder.svg"}
+                          alt={game["Game Name"]}
+                        />
 
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-white/5 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-white/5 opacity-60 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div
-                              className="p-3 rounded-full shadow-2xl transform scale-50 group-hover:scale-100 transition-all duration-500 hover:scale-110"
-                              style={{ background: COLORS.brandGradient }}
-                            >
-                              <FaPlay className="text-black dark:text-white ml-0.5" size={12} />
-                            </div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div
+                            className="p-3 rounded-full shadow-2xl transform scale-50 group-hover:scale-100 transition-all duration-500 hover:scale-110"
+                            style={{ background: COLORS.brandGradient }}
+                          >
+                            <FaPlay className="text-black dark:text-white ml-0.5" size={12} />
                           </div>
+                        </div>
 
-                          <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                            <div className="backdrop-blur-md bg-black/10 dark:bg-black/40 rounded-lg p-1.5 border border-black/10 dark:border-white/10 text-center shadow-xl">
-                              <p className="text-[9px] font-black text-black/90 dark:text-white/90 truncate uppercase tracking-tighter">
-                                {game["Game Name"]}
-                              </p>
-                            </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                          <div className="backdrop-blur-md bg-black/10 dark:bg-black/40 rounded-lg p-1.5 border border-black/10 dark:border-white/10 text-center shadow-xl">
+                            <p className="text-[9px] font-black text-black/90 dark:text-white/90 truncate uppercase tracking-tighter">
+                              {game["Game Name"]}
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="py-12 flex flex-col items-center justify-center gap-4 opacity-10">
-                <div className="h-px w-40 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.8em] text-black dark:text-white">
-                  Experience Excellence
-                </span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>,
-          document.body,
-        )}
+
+            <div className="py-12 flex flex-col items-center justify-center gap-4 opacity-10">
+              <div className="h-px w-40 bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+              <span className="text-[10px] font-black uppercase tracking-[0.8em] text-black dark:text-white">
+                Experience Excellence
+              </span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {confirmPopup.show && createPortal(
         <div className="fixed inset-0 flex items-center justify-center bg-black/10 dark:bg-black/40 backdrop-blur-2xl z-[100000] transition-all duration-500 animate-fadeIn">
@@ -618,40 +615,28 @@ const GameSection = ({ title, games, id }) => {
   )
 }
 
-const GamesDisplay = ({ section }) => {
-  const { slots, casino, fishing, poker } = useGames();
+const CasinoLobby = () => {
+  const { casino_lobby, casino, turbo } = useGames()
+  
+  // Define specific games to include as fallback if they aren't tagged in DB yet
+  const specificGames = ["aviator", "go rush", "mines", "trump card"]
+  
+  // If casino_lobby is empty (e.g. initial load or not migrated), use the manual filter as a smart fallback
+  const displayGames = (casino_lobby && casino_lobby.length > 0) 
+    ? casino_lobby 
+    : [...(casino || []), ...(turbo || [])].filter((game, index, self) => {
+        const name = game["Game Name"]?.toLowerCase() || ""
+        const isLobby = name.includes("lobby")
+        const isSpecific = specificGames.some(sg => name.includes(sg))
+        return (isLobby || isSpecific) && self.findIndex(g => g["Game UID"] === game["Game UID"]) === index
+      })
 
-  // Filter out lobby games from the general casino section
-  const filteredCasino = casino?.filter(game => 
-    !game["Game Name"]?.toLowerCase().includes("lobby")
-  ) || []
-
-  if (section === "trending-games") {
-    return <GameSection id="trending-games" title="🔥 Trending Games" games={filteredCasino} />
-  }
-
-  if (section === "slots") {
-    return <GameSection id="slots" title="🎮 Trending Slot" games={slots} />
-  }
-
-  if (section === "fishing") {
-    return <GameSection id="fishing" title="🐟 Fishing" games={fishing} />
-  }
-
-  if (section === "poker") {
-    return <GameSection id="poker" title="♤ Indian Poker Games" games={poker} />
-  }
-
-  // Default: return all in the new requested order if no section specified
   return (
-    <div className="games-display space-y-3">
+    <div className="games-display space-y-6 overflow-hidden">
       {" "}
-      <GameSection id="trending-games" title="🔥 Trending Games" games={filteredCasino} />
-      <GameSection id="slots" title="🎮 Trending Slot" games={slots} />
-      <GameSection id="poker" title="♤ Indian Poker Games" games={poker} />
-      <GameSection id="fishing" title="🐟 Fishing" games={fishing} />
+      <GameSection id="casino-lobby" title="🔴 Casino (Provider Lobby)" games={displayGames} />
     </div>
   )
 }
 
-export default GamesDisplay
+export default CasinoLobby

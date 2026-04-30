@@ -21,7 +21,7 @@ import { Toast } from "flowbite-react"
 import { useNavigate } from "react-router-dom"
 import { useColors } from '../../hooks/useColors';
 import { FONTS } from '../../constants/theme';
-import { API_URL } from '@/utils/constants';
+import { apiGet } from '@/utils/apiFetch';
 import { useSite } from "../../context/SiteContext"
 
 function Deposit() {
@@ -38,14 +38,13 @@ function Deposit() {
   const navigate = useNavigate()
   const availableDepositOptions = localStorage.getItem("deposit_options") || "100,500,1000,2000,5000"
   const userId = localStorage.getItem("account_id")
-  const authSecretKey = localStorage.getItem("auth_secret_key")
   const [toasts, setToasts] = useState([])
   const [notification, setNotification] = useState({ isOpen: false, message: "", type: "" })
   const [depositRecords, setDepositRecords] = useState([])
   const [historyFilter, setHistoryFilter] = useState("All")
   const [loadingHistory, setLoadingHistory] = useState(false)
 
-
+  const { accountInfo, logout } = useSite();
 
   const paymentOptions = [
     { id: "upi1", name: "UPI 1", type: "upi", logo: faQrcode },
@@ -77,14 +76,7 @@ function Deposit() {
   useEffect(() => {
     const fetchDepositAddress = async () => {
       try {
-        const response = await fetch(`${API_URL}?USER_ID=${userId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Route: "route-deposit-info",
-            AuthToken: authSecretKey,
-          },
-        })
+        const response = await apiGet("route-deposit-info");
         const result = await response.json()
         setUpi(result.UPI.UPI_ID_1)
         setUpi2(result.UPI.UPI_ID_2)
@@ -107,17 +99,14 @@ function Deposit() {
         })
       }
     }
-    if (userId && authSecretKey) fetchDepositAddress()
-  }, [userId, authSecretKey])
+    if (userId) fetchDepositAddress()
+  }, [userId])
 
   const fetchDepositRecords = async () => {
-    if (!authSecretKey || !userId) return
+    if (!userId) return
     setLoadingHistory(true)
     try {
-      const response = await fetch(`${API_URL}?USER_ID=${userId}&PAGE_NUM=1`, {
-        method: "GET",
-        headers: { Route: "route-recharge-records", AuthToken: authSecretKey },
-      })
+      const response = await apiGet("route-recharge-records", { PAGE_NUM: 1 });
       const result = await response.json()
       setDepositRecords(result.data || [])
     } catch (error) {
@@ -129,7 +118,7 @@ function Deposit() {
 
   useEffect(() => {
     fetchDepositRecords()
-  }, [userId, authSecretKey])
+  }, [userId])
 
   useEffect(() => {
     if (activeTab === "upi") setMode("UPIPay")
@@ -195,12 +184,13 @@ function Deposit() {
       }
       return;
     }
-    const params = new URLSearchParams({ USER_ID: userId, RECHARGE_AMOUNT: amount, RECHARGE_MODE: mode, RECHARGE_DETAILS: `${utr},${mode}` })
+
     try {
-      const response = await fetch(`${API_URL}?${params.toString()}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json", Route: "route-recharge-request", AuthToken: authSecretKey }
-      })
+      const response = await apiGet("route-recharge-request", {
+        RECHARGE_AMOUNT: amount,
+        RECHARGE_MODE: mode,
+        RECHARGE_DETAILS: `${utr},${mode}`
+      });
       const result = await response.json()
       if (result.status_code === "pending") {
         addToast(`Deposit of ₹${amount} submitted!`, "success")
@@ -215,7 +205,7 @@ function Deposit() {
     } catch (error) { addToast("Error submitting request", "error") }
   }
 
-  const { accountInfo, logout } = useSite();
+
   const isLoggedIn = !!(accountInfo?.account_id);
 
   useEffect(() => {
@@ -361,6 +351,15 @@ function Deposit() {
                         <span className="text-[7px] text-black/30 dark:text-white/30 font-black uppercase text-nowrap">{i.l}</span>
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] text-black dark:text-white font-bold uppercase ${i.m ? 'font-mono text-brand' : ''}`}>{i.v || "--"}</span>
+                          {i.v && i.v !== "--" && (
+                            <button
+                              onClick={() => copyToClipboard(i.v, i.l)}
+                              className="text-brand/60 hover:text-brand transition-colors text-[9px] p-1"
+                              title={`Copy ${i.l}`}
+                            >
+                              <FontAwesomeIcon icon={faCopy} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

@@ -11,27 +11,27 @@ const AccountInfo = ({ accountInfo }) => {
   // Premium initials-based avatar (inclusive for both male and female)
   const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${accountInfo.account_username}&backgroundColor=ffad33&fontSize=45&bold=true`;
 
-  const remainingWager  = parseFloat(accountInfo.tbl_requiredplay_balance || 0);
-  const casinoBonus     = parseFloat(accountInfo.account_casino_bonus || 0);
-  const sportsBonus     = parseFloat(accountInfo.account_sports_bonus || 0);
-  const activeBonus     = casinoBonus + sportsBonus;
-  const isWagering      = remainingWager > 0 && activeBonus > 0;
+  const remainingWager = parseFloat(accountInfo?.tbl_requiredplay_balance || 0);
+  const casinoBonus = parseFloat(accountInfo?.account_casino_bonus || 0);
+  const sportsBonus = parseFloat(accountInfo?.account_sports_bonus || 0);
+  const activeBonus = casinoBonus + sportsBonus;
+  const isWagering = remainingWager > 0 && activeBonus > 0;
 
   // Use real wagering data from tbl_bonus_redemptions (returned by account-info API)
-  const wagerRequired   = parseFloat(accountInfo.wagering_required  || 0);
-  const wagerCompleted  = parseFloat(accountInfo.wagering_completed || 0);
+  const wagerRequired = parseFloat(accountInfo.wagering_required || 0);
+  const wagerCompleted = parseFloat(accountInfo.wagering_completed || 0);
   // Accurate %: use API data when available, fall back to remaining estimate
   const wagerPct = isWagering
     ? (wagerRequired > 0
-        ? Math.min(100, Math.round((wagerCompleted / wagerRequired) * 100))
-        : 0)
+      ? Math.min(100, Math.round((wagerCompleted / wagerRequired) * 100))
+      : 0)
     : 0;
 
   const balanceData = [
-    { label: "Real Balance",   value: parseFloat(accountInfo.account_balance || 0).toLocaleString('en-IN'),       isCurrency: true, active: true },
-    { label: "Casino Bonus",   value: parseFloat(accountInfo.account_casino_bonus || 0).toLocaleString('en-IN'),  isCurrency: true, active: true, locked: isWagering && casinoBonus > 0 },
-    { label: "Sports Bonus",   value: parseFloat(accountInfo.account_sports_bonus || 0).toLocaleString('en-IN'),  isCurrency: true, active: true, locked: isWagering && sportsBonus > 0 },
-    { label: "Total Balance",  value: parseFloat(accountInfo.account_total_balance || 0).toLocaleString('en-IN'), isCurrency: true, active: true },
+    { label: "Real Balance", value: parseFloat(accountInfo.account_balance || 0).toLocaleString('en-IN'), isCurrency: true, active: true },
+    { label: "Casino Bonus", value: parseFloat(accountInfo.account_casino_bonus || 0).toLocaleString('en-IN'), isCurrency: true, active: true, locked: isWagering && casinoBonus > 0 },
+    { label: "Sports Bonus", value: parseFloat(accountInfo.account_sports_bonus || 0).toLocaleString('en-IN'), isCurrency: true, active: true, locked: isWagering && sportsBonus > 0 },
+    { label: "Total Balance", value: parseFloat(accountInfo.account_total_balance || 0).toLocaleString('en-IN'), isCurrency: true, active: true },
   ];
 
   return (
@@ -46,9 +46,9 @@ const AccountInfo = ({ accountInfo }) => {
             <div className={`w-14 h-14 rounded-2xl overflow-hidden border-2 border-brand/20 shadow-[0_0_20px_rgba(230,160,0,0.2)] group-hover:border-brand/50 transition-all duration-500 bg-gray-100 dark:bg-white/5 flex items-center justify-center relative`}>
               <div className="absolute inset-0 bg-gradient-to-br from-brand/20 to-transparent"></div>
               <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand">
-                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity">
-                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                 </svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
               </div>
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-[3px] border-[#111111] shadow-lg"></div>
@@ -56,7 +56,7 @@ const AccountInfo = ({ accountInfo }) => {
           <div className="flex flex-col">
             <span className="text-[10px] font-black text-black/30 dark:text-white/30 uppercase tracking-[0.3em] mb-1" style={{ fontFamily: FONTS.ui }}>Player Profile</span>
             <span className="text-base font-black text-black dark:text-white uppercase tracking-tight leading-none" style={{ fontFamily: FONTS.head }}>
-              {accountInfo.account_username}
+              {accountInfo?.account_username || "User"}
             </span>
           </div>
         </div>
@@ -71,13 +71,12 @@ const AccountInfo = ({ accountInfo }) => {
 
         <div className="grid grid-cols-2 gap-2">
           {balanceData.map((box, index) => (
-            <div 
+            <div
               key={index}
-              className={`p-2.5 rounded-[1.25rem] border transition-all duration-300 relative overflow-hidden group/box ${
-                box.active 
-                  ? "bg-white/[0.04] border-black/10 dark:border-white/10 hover:border-brand/30" 
+              className={`p-2.5 rounded-[1.25rem] border transition-all duration-300 relative overflow-hidden group/box ${box.active
+                  ? "bg-white/[0.04] border-black/10 dark:border-white/10 hover:border-brand/30"
                   : "bg-white/[0.01] border-black/5 dark:border-white/5 opacity-60"
-              } ${box.locked ? "border-amber-400/30 bg-amber-500/5" : ""}`}
+                } ${box.locked ? "border-amber-400/30 bg-amber-500/5" : ""}`}
             >
               <div className="relative z-10">
                 <div className="flex items-center gap-1 mb-1">
@@ -91,7 +90,7 @@ const AccountInfo = ({ accountInfo }) => {
               </div>
               {box.active && (
                 <div className="absolute top-0 right-0 p-2 opacity-[0.03] group-hover/box:opacity-10 transition-opacity">
-                   <FaCoins className="text-xl" />
+                  <FaCoins className="text-xl" />
                 </div>
               )}
             </div>
@@ -165,37 +164,37 @@ const AccountInfo = ({ accountInfo }) => {
       {/* Cashback Claim Banner (Manual Mode) */}
       {accountInfo.claimable_cashback > 0 && accountInfo.cashback_mode === 'manual' && (
         <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-brand/10 border border-purple-500/20 backdrop-blur-md relative overflow-hidden animate-pulse">
-           <div className="relative z-10 flex items-center justify-between">
-              <div>
-                 <p className="text-[8px] font-black text-purple-400 uppercase tracking-widest mb-0.5">Available Cashback</p>
-                 <p className="text-lg font-black text-white" style={{ fontFamily: FONTS.head }}>₹{parseFloat(accountInfo.claimable_cashback).toLocaleString('en-IN')}</p>
-              </div>
-              <button 
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`${accountInfo.BASE_URL}router/`, {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Route: "route-claim-cashback",
-                        AuthToken: localStorage.getItem("auth_secret_key"),
-                      },
-                      body: JSON.stringify({ USER_ID: localStorage.getItem("account_id"), LOG_ID: accountInfo.cashback_log_id })
-                    });
-                    const res = await response.json();
-                    if(res.status === "success") {
-                       window.dispatchEvent(new CustomEvent("site-data-refresh"));
-                       alert("Cashback claimed successfully!");
-                    } else {
-                       alert(res.message || "Failed to claim");
-                    }
-                  } catch(e) { console.error(e); }
-                }}
-                className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-[9px] font-black uppercase rounded-lg shadow-lg active:scale-95 transition-all"
-              >
-                Claim Now
-              </button>
-           </div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[8px] font-black text-purple-400 uppercase tracking-widest mb-0.5">Available Cashback</p>
+              <p className="text-lg font-black text-white" style={{ fontFamily: FONTS.head }}>₹{parseFloat(accountInfo.claimable_cashback).toLocaleString('en-IN')}</p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(`${accountInfo.BASE_URL}router/`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Route: "route-claim-cashback",
+                      AuthToken: localStorage.getItem("auth_secret_key"),
+                    },
+                    body: JSON.stringify({ USER_ID: localStorage.getItem("account_id"), LOG_ID: accountInfo.cashback_log_id })
+                  });
+                  const res = await response.json();
+                  if (res.status === "success") {
+                    window.dispatchEvent(new CustomEvent("site-data-refresh"));
+                    alert("Cashback claimed successfully!");
+                  } else {
+                    alert(res.message || "Failed to claim");
+                  }
+                } catch (e) { console.error(e); }
+              }}
+              className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-[9px] font-black uppercase rounded-lg shadow-lg active:scale-95 transition-all"
+            >
+              Claim Now
+            </button>
+          </div>
         </div>
       )}
     </div>
