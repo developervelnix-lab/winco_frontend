@@ -10,7 +10,7 @@ async function main() {
   delete require.cache[require.resolve('sharp')];
   const sharp = require('sharp');
 
-  const source = path.join(__dirname, 'public', 'wincologo.png');
+  const source = path.join(__dirname, 'public', 'app_logo', 'app_logo.jpg');
 
   const sizes = [
     { name: 'logo192.png', size: 192 },

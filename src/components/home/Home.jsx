@@ -17,6 +17,7 @@ import PromotionSection from "./PromotionSection"
 import NewsTicker from "./NewsTicker"
 import Footer from "./Footer"
 import HomeSearch from "./HomeSearch"
+import ProviderSelection from "./ProviderSelection"
 import { useColors } from '../../hooks/useColors'
 import { FONTS } from '../../constants/theme'
 import { useSite } from "../../context/SiteContext"
@@ -152,6 +153,9 @@ function Home() {
           </div>
 
           {/* DYNAMIC GAME SECTIONS */}
+          <div className="mb-3 md:mb-4">
+            <ProviderSelection />
+          </div>
           <div className="mb-3 md:mb-4">
             <Live />
           </div>

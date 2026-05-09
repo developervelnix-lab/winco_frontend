@@ -58,7 +58,7 @@ const NewsTicker = () => {
                                 className="text-[10px] md:text-[11px] font-bold uppercase tracking-wide text-white/90 px-4"
                                 style={{ fontFamily: FONTS.ui }}
                             >
-                                {accountInfo?.service_marquee || "Welcome to Winco! Experience the best betting and casino platform. Daily rewards and instant withdrawals available now."}
+                                {accountInfo?.service_marquee || "Welcome to Velplay365! Experience the best betting and casino platform. Daily rewards and instant withdrawals available now."}
                             </span>
                             <span className="mx-4 text-white/20">I</span>
                         </div>

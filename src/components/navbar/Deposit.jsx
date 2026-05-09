@@ -84,7 +84,7 @@ function Deposit() {
           setQuickAmounts(result.deposit_options.split(","))
         }
         setBank({
-          ACCOUNT_HOLDER: result.BANK_DETAILS?.ACCOUNT_HOLDER || "WINCO TRADING",
+          ACCOUNT_HOLDER: result.BANK_DETAILS?.ACCOUNT_HOLDER || "VELPLAY365 TRADING",
           ACCOUNT_NUMBER: result.BANK_DETAILS?.ACCOUNT_NUMBER || "912020001234567",
           IFSC_CODE: result.BANK_DETAILS?.IFSC_CODE || "UTIB0001234",
           BANK_NAME: result.BANK_DETAILS?.BANK_NAME || "AXIS BANK"
@@ -92,7 +92,7 @@ function Deposit() {
       } catch (error) {
         console.error("Error fetching Deposit Address", error)
         setBank({
-          ACCOUNT_HOLDER: "WINCO TRADING",
+          ACCOUNT_HOLDER: "VELPLAY365 TRADING",
           ACCOUNT_NUMBER: "912020001234567",
           IFSC_CODE: "UTIB0001234",
           BANK_NAME: "AXIS BANK"
@@ -168,7 +168,7 @@ function Deposit() {
   const handleDeposit = async () => {
     if (!amount || parseFloat(amount) < 100) { addToast("Min. ₹100 required", "error"); return; }
     if (mode === "CasyPay") {
-      const paymentURL = "https://pay.winco.cc/gateapi/payments/gateways1/initialisation/casypay.php"
+      const paymentURL = "https://pay.velplay365.com/gateapi/payments/gateways1/initialisation/casypay.php"
       window.location.href = `${paymentURL}?amount=${amount}&user_id=${userId}`
       return
     }

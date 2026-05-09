@@ -201,41 +201,59 @@ const BrandManager = () => {
         const logoPath = accountInfo.service_site_logo;
         const logoUrl = logoPath.startsWith('http') || logoPath.startsWith('data:')
           ? logoPath
-          : `${BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL}${logoPath.startsWith('/') ? logoPath : `/${logoPath}`}`;
+          : (logoPath.startsWith('/') ? window.location.origin + logoPath : `${BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL}${logoPath.startsWith('/') ? logoPath : `/${logoPath}`}`);
 
         console.log("PWA Branding - Logo URL:", logoUrl);
 
-        // Update Icons
+        // Update Favicon and Apple Touch Icon with cache buster
+        const cacheBuster = `?v=${Date.now()}`;
+        const logoWithBuster = logoUrl + cacheBuster;
+
         const favicon = document.querySelector('link[rel="icon"]');
-        if (favicon) favicon.href = logoUrl;
+        if (favicon) favicon.href = logoWithBuster;
 
         const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
-        if (appleIcon) appleIcon.href = logoUrl;
+        if (appleIcon) appleIcon.href = logoWithBuster;
 
         // Dynamically update Manifest to ensure the browser's install prompt uses the backend logo
         const manifest = {
-          name: accountInfo.service_site_name || "Winco Official Platform",
-          short_name: (accountInfo.service_site_name || "Winco").split(' ')[0],
-          description: accountInfo.service_tagline?.replace(/<[^>]*>/g, '') || "Winco Gaming & Sports Betting Platform.",
+          name: accountInfo.service_site_name || "Velplay365 Official Platform",
+          short_name: (accountInfo.service_site_name || "Velplay365").split(' ')[0],
+          description: accountInfo.service_tagline?.replace(/<[^>]*>/g, '') || "Velplay365 Gaming & Sports Betting Platform.",
           start_url: window.location.origin + "/",
           display: "standalone",
           background_color: "#000000",
           theme_color: "#E49C16",
           icons: [
             {
-              src: window.location.origin + "/logo192.png",
+              src: logoUrl,
               sizes: "192x192",
+              type: "image/png",
               purpose: "any"
             },
             {
-              src: window.location.origin + "/logo512.png",
+              src: logoUrl,
               sizes: "512x512",
+              type: "image/png",
               purpose: "any"
             },
             {
-              src: window.location.origin + "/logo512.png",
+              src: logoUrl,
               sizes: "512x512",
+              type: "image/png",
               purpose: "maskable"
+            },
+            {
+              src: "/pwa-192x192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any"
+            },
+            {
+              src: "/pwa-512x512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any"
             }
           ]
         };

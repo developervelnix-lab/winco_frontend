@@ -10,24 +10,27 @@ export const SiteProvider = ({ children }) => {
 
   // 2. Build initial state from defaults + local session + cached data
   const INITIAL_ACCOUNT_INFO = {
-    service_site_name: "Winco",
-    service_site_logo: "/wincologo.png",
+    service_site_name: "Velplay365",
+    service_site_logo: "/image.png",
     service_tagline: "PLAY · WIN · REPEAT",
-    service_marquee: "Welcome to Winco! Experience world-class betting and gaming. Sign up now to get exclusive bonuses and daily rewards. Minimum deposit ₹100. Fast 24/7 withdrawals.",
-    service_app_download_url: "https://winco.cc/Winco.apk",
-    service_support_url: "https://t.me/winco_support",
+    service_marquee: "Welcome to Velplay365! Experience world-class betting and gaming. Sign up now to get exclusive bonuses and daily rewards. Minimum deposit ₹100. Fast 24/7 withdrawals.",
+    service_app_download_url: "https://velplay.cc/Velplay.apk",
+    service_support_url: "https://t.me/velplay_support",
     account_id: initialUserId !== "guest" ? initialUserId : "guest",
     account_username: initialUserId !== "guest" ? "User" : "Guest",
     account_balance: initialUserId !== "guest" ? "0.00" : "0.00",
   };
 
   const DEFAULT_HERO_BANNERS = [
-    { image_path: "https://images.unsplash.com/photo-1518173946687-a4c8a9833d8e?q=80&w=2000&auto=format&fit=crop", action_url: "#" },
-    { image_path: "https://images.unsplash.com/photo-1540747737273-4629e0756eb9?q=80&w=2000&auto=format&fit=crop", action_url: "#" }
+    { image_path: "/banner/photo_6316855436321165721_y.jpg", action_url: "#" },
+    { image_path: "/banner/photo_6316855436321165722_y.jpg", action_url: "#" },
+    { image_path: "/banner/photo_6316855436321165723_y.jpg", action_url: "#" },
+    { image_path: "/banner/photo_6316855436321165724_y.jpg", action_url: "#" }
   ];
 
   const DEFAULT_PROMO_BANNERS = [
-    { image_path: "https://images.unsplash.com/photo-1540747737273-4629e0756eb9?q=80&w=2000&auto=format&fit=crop", action_url: "#" }
+    { image_path: "/banner/photo_6316855436321165721_y.jpg", action_url: "#" },
+    { image_path: "/banner/photo_6316855436321165722_y.jpg", action_url: "#" }
   ];
 
   // Try to load from cache on initialization to prevent flicker
@@ -42,7 +45,13 @@ export const SiteProvider = ({ children }) => {
   const [promoBanners, setPromoBanners] = useState(() => {
     const cached = typeof window !== 'undefined' ? localStorage.getItem("cached_promo_banners") : null;
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) { return DEFAULT_PROMO_BANNERS; }
+      try { 
+        const parsed = JSON.parse(cached);
+        if (parsed.length > 0 && parsed[0].image_path?.includes('unsplash.com')) {
+          return DEFAULT_PROMO_BANNERS;
+        }
+        return parsed; 
+      } catch (e) { return DEFAULT_PROMO_BANNERS; }
     }
     return DEFAULT_PROMO_BANNERS;
   });
@@ -50,7 +59,14 @@ export const SiteProvider = ({ children }) => {
   const [heroBanners, setHeroBanners] = useState(() => {
     const cached = typeof window !== 'undefined' ? localStorage.getItem("cached_hero_banners") : null;
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) { return DEFAULT_HERO_BANNERS; }
+      try { 
+        const parsed = JSON.parse(cached);
+        // If cache is old unsplash, use new defaults
+        if (parsed.length > 0 && parsed[0].image_path?.includes('unsplash.com')) {
+          return DEFAULT_HERO_BANNERS;
+        }
+        return parsed; 
+      } catch (e) { return DEFAULT_HERO_BANNERS; }
     }
     return DEFAULT_HERO_BANNERS;
   });
@@ -79,8 +95,9 @@ export const SiteProvider = ({ children }) => {
       return;
     }
 
+    let fetchUrl = "";
     try {
-      const fetchUrl = `${API_URL}?Route=route-account-info&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}&_t=${Date.now()}`;
+      fetchUrl = `${API_URL}?Route=route-account-info&AuthToken=${encodeURIComponent(authSecretKey)}&USER_ID=${encodeURIComponent(userId)}&_t=${Date.now()}`;
       
       const response = await fetch(fetchUrl, {
         method: "GET",
@@ -94,6 +111,7 @@ export const SiteProvider = ({ children }) => {
       });
 
       const result = await response.json();
+      console.log("✅ [SiteContext] API Response:", result);
 
       if (result.status_code === "success" && result.data && result.data[0]) {
         const serverData = result.data[0];
@@ -110,7 +128,13 @@ export const SiteProvider = ({ children }) => {
             }
           });
 
-          const mergedInfo = { ...prev, ...cleanServerData };
+          const mergedInfo = { 
+            ...prev, 
+            ...cleanServerData, 
+            service_site_name: "Velplay365", 
+            service_site_logo: "/image.png",
+            service_marquee: "Welcome to Velplay365! Experience world-class betting and gaming. Sign up now to get exclusive bonuses and daily rewards. Minimum deposit ₹100. Fast 24/7 withdrawals."
+          };
           
           let finalInfo = mergedInfo;
           if (isLoggedIn && serverReturnedGuest) {
@@ -127,24 +151,12 @@ export const SiteProvider = ({ children }) => {
         });
 
         // Normalize and Update Banners with Caching
-        if (result.promo_banners && result.promo_banners.length > 0) {
-          const normalizedPromo = result.promo_banners.map(banner => ({
-            image_path: banner.image_path || banner.image || banner.promo_img,
-            action_url: banner.action_url || banner.action || banner.promo_action
-          }));
-          setPromoBanners(normalizedPromo);
-          localStorage.setItem("cached_promo_banners", JSON.stringify(normalizedPromo));
-        }
-        
-        const rawHero = result.hero_banners || result.slideShowList;
-        if (rawHero && rawHero.length > 0) {
-          const normalizedHero = rawHero.map(banner => ({
-            image_path: banner.image_path || banner.slider_img || banner.tbl_slider_img || banner.image,
-            action_url: banner.action_url || banner.slider_action || banner.tbl_slider_action || banner.action
-          }));
-          setHeroBanners(normalizedHero);
-          localStorage.setItem("cached_hero_banners", JSON.stringify(normalizedHero));
-        }
+        // Ignore server-side banners as requested, strictly use local defaults
+        console.log("🚀 [SiteContext] Forcing local banners:", DEFAULT_HERO_BANNERS);
+        setPromoBanners(DEFAULT_PROMO_BANNERS);
+        setHeroBanners(DEFAULT_HERO_BANNERS);
+        localStorage.removeItem("cached_promo_banners");
+        localStorage.removeItem("cached_hero_banners");
 
         // Handle System Notices
         if (result.noticeArr && result.noticeArr.length >= 2) {
@@ -159,7 +171,8 @@ export const SiteProvider = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error("❌ [SiteContext] API Fetch Failed:", error);
+      console.error("❌ [SiteContext] API Fetch Failed for URL:", fetchUrl);
+      console.error("Error details:", error);
     } finally {
       setLoading(false);
     }

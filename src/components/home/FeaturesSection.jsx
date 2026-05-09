@@ -168,7 +168,7 @@ const FeaturesSection = () => {
                 className="text-base sm:text-lg md:text-xl font-black text-black dark:text-white tracking-[0.1em] md:tracking-[0.2em] uppercase leading-none"
                 style={{ fontFamily: FONTS.head }}
               >
-                Why Choose <span style={{ color: COLORS.brand }}>Winco</span>?
+                Why Choose <span style={{ color: COLORS.brand }}>Velplay365</span>?
               </h2>
               <p className="text-[8px] sm:text-[9px] md:text-[10px] text-black/30 dark:text-white/30 font-bold uppercase tracking-[0.2em] md:tracking-[0.4em] mt-2 md:mt-3">
                 Why We're Different

@@ -321,7 +321,7 @@ const BonusDetailsPage = () => {
                                 <div className="mt-8 flex items-center gap-4">
                                     <div className={`h-px flex-grow ${isDark ? 'bg-white/5' : 'bg-black/5'}`}></div>
                                     <p className={`text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isDark ? 'text-white/20' : 'text-black/30'}`}>
-                                        Winco Gaming Group • Fair Play Verified
+                                        Velplay365 Gaming Group • Fair Play Verified
                                     </p>
                                     <div className={`h-px flex-grow ${isDark ? 'bg-white/5' : 'bg-black/5'}`}></div>
                                 </div>

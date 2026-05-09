@@ -10,7 +10,7 @@ const AppInstallHero = ({ accountInfo }) => {
   const COLORS = useColors();
   const { isInstallable, installApp, isInstalled, platform } = usePWAInstall();
 
-  const siteName = accountInfo?.service_site_name || "Winco Official Platform";
+  const siteName = accountInfo?.service_site_name || "Velplay365 Official Platform";
   const siteLogo = accountInfo?.service_site_logo
     ? (accountInfo.service_site_logo.startsWith('http')
       ? accountInfo.service_site_logo
@@ -19,7 +19,7 @@ const AppInstallHero = ({ accountInfo }) => {
 
   const handleInstall = () => {
     if (platform === 'android' && !isInstalled) {
-      window.open(accountInfo?.service_apk_url || "/winco.apk", "_blank");
+      window.open(accountInfo?.service_apk_url || "/velplay.apk", "_blank");
     } else if (isInstallable) {
       installApp();
     } else {

@@ -84,7 +84,7 @@ function Navbar() {
 
   // Logo URL Helper
   const getSafeLogoUrl = (logoPath) => {
-    if (!logoPath || logoPath === "/favicon.png" || logoPath.includes('favicon.png')) return "/favicon.png";
+    if (!logoPath || logoPath === "/favicon.png" || logoPath.includes('favicon.png')) return "/image.png";
     if (logoPath.startsWith('http') || logoPath.startsWith('data:')) return logoPath;
 
     // If it's a relative path from the backend, prepend BASE_URL
@@ -421,28 +421,48 @@ function Navbar() {
       <div className="fixed top-0 left-0 w-full z-[100] custom-header-wrapper shadow-lg">
         {/* TOPBAR */}
         <div className="topbar" style={{ backgroundColor: COLORS.bg, borderBottom: `1px solid ${COLORS.bg4}` }}>
-          <div className="topbar-left">
-            <div className="flex items-center gap-1.5 md:gap-4 whitespace-nowrap">
-              <div className="topbar-item"><span style={{ color: COLORS.brand }}>🕐</span> IST {new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' })}</div>
-              <div className="live-badge" style={{ backgroundColor: COLORS.red }}>LIVE</div>
-
-              {trendingMatches.slice(0, 2).map((match, idx) => (
-                <React.Fragment key={idx}>
-                  <div className="topbar-item cursor-pointer hover:text-brand transition-colors flex items-center gap-1.5" onClick={() => handleLiveSportSelect(liveSport[idx % liveSport.length])}>
-                    <span className="font-semibold" style={{ color: idx % 2 === 0 ? COLORS.red : COLORS.brand }}>{idx % 2 === 0 ? 'Live Match' : 'Trending'}</span>
-                    <span className="text-black dark:text-white">{match.name}</span>
-                    {match.viewers > 0 && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${COLORS.brand}22`, color: COLORS.brand }}>
-                        {idx % 2 === 0 ? '🔴' : '👁'} {match.viewers.toLocaleString()} watching
-                      </span>
-                    )}
-                  </div>
-                  <div className="topbar-item opacity-20">|</div>
-                </React.Fragment>
-              ))}
+          <div className="topbar-left flex-1 min-w-0 h-full overflow-hidden">
+            <div className="flex items-center gap-2 md:gap-4 whitespace-nowrap h-full">
+              <div className="topbar-item shrink-0"><span style={{ color: COLORS.brand }}>🕐</span> IST {new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' })}</div>
+              <div className="live-badge shrink-0" style={{ backgroundColor: COLORS.red }}>LIVE</div>
+              
+              <div className="overflow-hidden flex-1 relative h-full flex items-center">
+                <div className="flex items-center gap-8 animate-marquee whitespace-nowrap hover:pause-marquee cursor-default">
+                  {trendingMatches.map((match, idx) => (
+                    <React.Fragment key={idx}>
+                      <div className="topbar-item cursor-pointer hover:text-brand transition-colors flex items-center gap-1.5" onClick={() => handleLiveSportSelect(liveSport[idx % liveSport.length])}>
+                        <span className="font-semibold" style={{ color: idx % 2 === 0 ? COLORS.red : COLORS.brand }}>{idx % 2 === 0 ? 'Live Match' : 'Trending'}</span>
+                        <span className="text-black/80 dark:text-white/80">{match.name}</span>
+                        {match.viewers > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${COLORS.brand}22`, color: COLORS.brand }}>
+                            {idx % 2 === 0 ? '🔴' : '👁'} {match.viewers.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="topbar-item opacity-10">|</div>
+                    </React.Fragment>
+                  ))}
+                  {/* Duplicate for seamless loop */}
+                  {trendingMatches.map((match, idx) => (
+                    <React.Fragment key={`dup-${idx}`}>
+                      <div className="topbar-item cursor-pointer hover:text-brand transition-colors flex items-center gap-1.5" onClick={() => handleLiveSportSelect(liveSport[idx % liveSport.length])}>
+                        <span className="font-semibold" style={{ color: idx % 2 === 0 ? COLORS.red : COLORS.brand }}>{idx % 2 === 0 ? 'Live Match' : 'Trending'}</span>
+                        <span className="text-black/80 dark:text-white/80">{match.name}</span>
+                        {match.viewers > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${COLORS.brand}22`, color: COLORS.brand }}>
+                            {idx % 2 === 0 ? '🔴' : '👁'} {match.viewers.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="topbar-item opacity-10">|</div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="topbar-right">
+
+          <div className="topbar-right shrink-0 ml-4">
             <div className="topbar-item text-black/70 dark:text-white/70 hover:text-black dark:text-white cursor-pointer transition-colors">🇮🇳 IN</div>
             <div className="topbar-item text-black/70 dark:text-white/70 hover:text-black dark:text-white cursor-pointer transition-colors">🌐 EN</div>
             {accountInfo?.service_support_url && (
@@ -470,7 +490,7 @@ function Navbar() {
                 src={getSafeLogoUrl(accountInfo?.service_site_logo)}
                 className="h-8 md:h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(230,160,0,0.3)] hover:scale-105 transition-transform duration-300"
                 alt="Logo"
-                onError={(e) => { e.target.src = "/favicon.png"; }}
+                onError={(e) => { e.target.src = "/image.png"; }}
               />
               {accountInfo?.service_tagline && (
                 <div className="logo-sub hidden md:block" style={{ borderLeft: `2px solid ${COLORS.brand}` }} dangerouslySetInnerHTML={{ __html: accountInfo.service_tagline }}></div>
@@ -549,7 +569,7 @@ function Navbar() {
                       src={getSafeLogoUrl(accountInfo?.service_site_logo)}
                       className="w-full h-full object-contain p-0.5"
                       alt="Logo"
-                      onError={(e) => { e.target.src = "/favicon.png"; }}
+                      onError={(e) => { e.target.src = "/image.png"; }}
                     />
                   </div>
                   <span className="text-[11px] font-medium tracking-wide">Open in app</span>
@@ -636,7 +656,7 @@ function Navbar() {
 
       </div>
       {/* Navbar Layout Spacer (Ensures content starts below the fixed navbar with a slight gap on ALL pages) */}
-      <div className="h-[120px] md:h-[140px] relative w-full"></div>
+      <div className="h-[95px] md:h-[135px] relative w-full"></div>
 
 
       {/* Background Overlay with Blur Effect */}
@@ -777,10 +797,10 @@ function Navbar() {
                       if (isInstalled) {
                         // launch_handler in manifest routes this to the standalone window
                         window.open(window.location.origin, '_blank');
-                      } else if (currentDevice === 'android') {
-                        window.open(accountInfo?.service_apk_url || "/winco.apk", "_blank");
                       } else if (isInstallable) {
                         installApp();
+                      } else if (currentDevice === 'android') {
+                        window.open(accountInfo?.service_apk_url || "/velplay.apk", "_blank");
                       } else {
                         // Fallback: open in new tab, launch_handler may still catch it
                         window.open(window.location.origin, '_blank');

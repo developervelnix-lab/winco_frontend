@@ -30,7 +30,7 @@ const BrandingBanner = () => {
           className="w-full text-[clamp(0.6rem,2.5vw,2rem)] md:text-2xl lg:text-3xl font-black text-black dark:text-white leading-none uppercase tracking-tighter whitespace-nowrap"
         >
           PREMIER <span className="inline-block text-transparent bg-clip-text drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]" style={{ backgroundImage: `linear-gradient(to bottom, ${COLORS.brandLight}, ${COLORS.brand}, ${COLORS.brandDark})` }}>BETTING</span> EXPERIENCE <span className="text-black/20 dark:text-white/20 font-light">—</span> <span className="relative">
-            {accountInfo?.service_site_name || 'SITE'}
+            Velplay365
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: "100%" }}

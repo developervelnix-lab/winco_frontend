@@ -22,7 +22,7 @@
       if (isInstalled) {
         window.open(window.location.origin, '_blank');
       } else if (platform === 'android') {
-        window.open(accountInfo?.service_app_download_url || "https://winco.cc/Winco.apk", "_blank");
+        window.open(accountInfo?.service_app_download_url || "https://velplay365.com/Velplay365.apk", "_blank");
       } else if (isInstallable) {
         installApp();
       } else {
@@ -56,9 +56,10 @@
               <div className="flex items-center gap-3">
                 <div className="p-1.5 bg-gray-100 dark:bg-white/5 rounded-xl border border-black/10 dark:border-white/10">
                   <img 
-                    src={accountInfo?.service_site_logo?.startsWith('http') ? accountInfo.service_site_logo : `${BASE_URL}${accountInfo?.service_site_logo}`} 
+                    src={accountInfo?.service_site_logo?.startsWith('http') ? accountInfo.service_site_logo : (!accountInfo?.service_site_logo ? "/image.png" : `${BASE_URL}${accountInfo?.service_site_logo}`)} 
                     alt={accountInfo?.service_site_name || 'Site'} 
                     className="h-8 w-auto px-1" 
+                    onError={(e) => { e.target.src = "/image.png"; }}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -67,14 +68,14 @@
                 </div>
               </div>
               <p className="text-xs leading-relaxed text-black/70 dark:text-white/70 font-medium">
-                <strong className="text-black dark:text-white">{accountInfo?.service_site_name || 'Winco'}</strong> is the best platform for live and uninterrupted online
+                <strong className="text-black dark:text-white">{accountInfo?.service_site_name || 'Velplay365'}</strong> is the best platform for live and uninterrupted online
                 betting for sports, Live 24hr betting with a wide spectrum of sports
                 such as Cricket, Soccer, Horse Racing, Kabaddi, <strong style={{ color: COLORS.brand }}>Aviator
                 Predictor</strong>, Hockey, Basketball, <strong style={{ color: COLORS.brand }}>Andar Bahar Game</strong> and
                 many more.
               </p>
 
-              {/* Social Icons - Now correctly placed under Winco description */}
+              {/* Social Icons - Now correctly placed under Velplay365 description */}
               <div className="flex items-center gap-3 flex-wrap justify-start">
                 {(() => {
                   if(accountInfo?.service_social_links && accountInfo.service_social_links.length > 0) {
@@ -180,7 +181,7 @@
             <div className="flex flex-col md:flex-row items-center justify-center gap-x-12 gap-y-4">
               <div className="flex flex-col items-center md:items-start gap-1">
                 <p className="text-[10px] text-black/40 dark:text-white/40 font-black uppercase tracking-[0.4em]">
-                  © Copyright 2025 {accountInfo?.service_site_name || 'Winco'}
+                  © Copyright 2025 {accountInfo?.service_site_name || 'Velplay365'}
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">

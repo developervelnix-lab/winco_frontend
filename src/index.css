@@ -97,7 +97,7 @@ body {
   perspective: 1000;
 }
 
-/* GPU Accelerat  ion for smooth section transitions */
+/* GPU Acceleration for smooth section transitions */
 .game-section,
 .hero,
 .custom-header {

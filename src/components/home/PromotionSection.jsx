@@ -36,7 +36,7 @@ function PromotionSection({ banners = [] }) {
   }
 
   const handleImageClick = (imagePath) => {
-    setSelectedImage(imagePath?.startsWith('http') ? imagePath : `${BASE_URL}${encodeURI(imagePath)}`);
+    setSelectedImage(imagePath?.startsWith('http') ? imagePath : (imagePath?.startsWith('/') ? window.location.origin + imagePath : `${BASE_URL}${imagePath}`));
   };
 
   const closePortal = () => setSelectedImage(null);
@@ -129,7 +129,7 @@ function PromotionSection({ banners = [] }) {
                    onClick={() => handleImageClick(item.image_path)}
                 >
                   <img 
-                    src={item.image_path?.startsWith('http') ? item.image_path : `${BASE_URL}${encodeURI(item.image_path)}`} 
+                    src={item.image_path?.startsWith('http') ? item.image_path : (item.image_path?.startsWith('/') ? window.location.origin + item.image_path : `${BASE_URL}${item.image_path}`)} 
                     className="w-full h-full object-contain transition-transform duration-700 group-hover/card:scale-110" 
                     alt={`Promotion ${index + 1}`} 
                   />

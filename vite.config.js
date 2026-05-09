@@ -13,9 +13,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'screenshots/*.png', 'logo192.png', 'logo512.png'],
       manifest: {
-        name: 'Winco Official Platform',
-        short_name: 'Winco',
-        description: 'Winco Gaming & Sports Betting Platform. High odds, fast withdrawals, and exclusive promotions.',
+        name: 'Velplay365 Official Platform',
+        short_name: 'Velplay365',
+        description: 'Velplay365 Gaming & Sports Betting Platform. High odds, fast withdrawals, and exclusive promotions.',
         theme_color: '#E49C16',
         background_color: '#000000',
         display: 'standalone',
@@ -23,19 +23,19 @@ export default defineConfig({
         categories: ['games', 'entertainment', 'finance'],
         icons: [
           {
-            src: 'logo192.png',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'logo512.png',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: 'logo512.png',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
@@ -67,7 +67,13 @@ export default defineConfig({
     },
   },
   server: {
-    // Vite handles history API fallback automatically
+    proxy: {
+      '/api': {
+        target: 'https://velplay365.com',
+        changeOrigin: true,
+        secure: true,
+      }
+    }
   },
   preview: {
     // Vite handles history API fallback automatically

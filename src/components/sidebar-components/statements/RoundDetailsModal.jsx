@@ -27,8 +27,8 @@ const RoundDetailsModal = ({ isOpen, onClose, transaction }) => {
     if (matchName.includes('kingmaker') || matchName.includes('km')) return 'King Maker';
     if (matchName.includes('turbo')) return 'Turbo Games';
     
-    if (rawProvider && rawProvider !== 'Standard' && rawProvider !== 'winco') return rawProvider;
-    return transaction.r_match_name || 'Winco Official';
+    if (rawProvider && rawProvider !== 'Standard' && rawProvider !== 'velplay365') return rawProvider;
+    return transaction.r_match_name || 'Velplay365 Official';
   };
 
   const detectedProvider = getDetectedProvider();

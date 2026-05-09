@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaCrown, FaTag, FaGift, FaInfoCircle } from 'react-icons/fa';
 import { useColors } from '../../../hooks/useColors';
 import { FONTS } from '../../../constants/theme';
-import { API_URL } from '../../../utils/constants';
+import { API_URL, URL as BASE_URL } from '../../../utils/constants';
 import { useSite } from '../../../context/SiteContext';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -34,7 +34,7 @@ const BonusCard = ({ id, title, description, endDate, image, promo_type, pending
     <div className="bg-gray-100 dark:bg-black border border-black/5 dark:border-white/5 rounded-xl overflow-hidden group hover:border-brand/20 transition-all duration-300 flex flex-col h-full">
       <div className="relative aspect-[3/2] md:aspect-video overflow-hidden">
         <img
-          src={image ? (image.startsWith('http') ? image : `${API_URL.replace('router/', '')}${image}`) : ''}
+          src={image ? (image.startsWith('http') ? image : `${BASE_URL}${image}`) : ''}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />

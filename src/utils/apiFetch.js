@@ -29,6 +29,7 @@ export async function apiFetch(route, options = {}, extraParams = {}) {
   });
 
   const url = `${API_URL}?${params.toString()}`;
+  console.log("🚀 [apiFetch] Calling URL:", url);
 
   // Merge headers — always include Route + AuthToken in headers too (redundancy)
   const headers = {
